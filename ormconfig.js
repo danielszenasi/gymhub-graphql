@@ -20,5 +20,5 @@ module.exports = {
 
   // logger
   logging: true,
-  logger: 'debug'
+  logger: 'all'
 };
