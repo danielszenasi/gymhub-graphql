@@ -1,9 +1,9 @@
-const { NODE_ENV, DATABASE_URI } = process.env;
+const { NODE_ENV, DATABASE_URL } = process.env;
 
 module.exports = {
   // database config
   type: 'postgres',
-  url: DATABASE_URI,
+  url: DATABASE_URL,
 
   // entity config
   entities: [NODE_ENV === 'production' ? 'dist/**/*.entity.js' : 'src/**/*.entity.ts'],
