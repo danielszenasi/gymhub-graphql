@@ -43,7 +43,7 @@ const server = new ApolloServer({
 
 if (process.env.NODE_ENV !== 'test') {
   createConnection()
-    .then(() => server.listen({ port: 4000 }))
+    .then(() => server.listen({ port: process.env.PORT }))
     .then(({ url }) => console.log(`🚀 app running at ${url}`));
 }
 
