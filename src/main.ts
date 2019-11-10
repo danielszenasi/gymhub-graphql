@@ -4,6 +4,8 @@ import resolvers from './resolvers';
 import { createConnection } from 'typeorm';
 import { verify } from 'jsonwebtoken';
 import * as Email from 'email-templates';
+import * as nodemailer from 'nodemailer';
+import * as postmarkTransport from 'nodemailer-postmark-transport';
 import 'reflect-metadata';
 
 export function getUser(request: any) {
@@ -21,15 +23,20 @@ export function getUser(request: any) {
 const context = async ({ req }) => {
   const user = getUser(req);
 
+  const transport = nodemailer.createTransport(
+    postmarkTransport({
+      auth: {
+        apiKey: process.env.POSTMARK_API_KEY
+      }
+    })
+  );
   const mailer = new Email({
     message: {
-      from: 'niftylettuce@gmail.com'
+      from: 'no-reply@gymhub.io'
     },
     // uncomment below to send emails in development/test env:
     // send: true
-    transport: {
-      jsonTransport: true
-    }
+    transport
   });
 
   return { mailer, user };
