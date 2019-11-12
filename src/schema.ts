@@ -1,4 +1,4 @@
-const { gql } = require('apollo-server');
+const { gql } = require("apollo-server");
 
 const typeDefs = gql`
   scalar JSON
@@ -7,7 +7,7 @@ const typeDefs = gql`
     me: User
     clients: [User]
     exercises: [Exercise]
-    workouts: [Workout]
+    workouts(userId: String): [Workout]
   }
   type Mutation {
     login(email: String!, password: String!): AuthPayload
@@ -34,7 +34,11 @@ const typeDefs = gql`
       bodyParts: JSON!
       file: Upload
     ): Exercise
-    createWorkout(startsAt: Date!, userId: String, exercises: [ExerciseHistoryInput!]!): Workout
+    createWorkout(
+      startsAt: Date!
+      userId: String
+      exercises: [ExerciseHistoryInput!]!
+    ): Workout
   }
   input ExerciseHistoryInput {
     exerciseId: String!

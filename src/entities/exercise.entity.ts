@@ -1,9 +1,39 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ValueTransformer } from 'typeorm';
-import { User } from './user.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  ValueTransformer
+} from "typeorm";
+import { User } from "./user.entity";
 
-type Measure = 'mass' | 'length';
-type Category = 'barbell' | 'bumbbell' | 'machine' | 'weighted bodyweight';
-type BodyPart = 'arms' | 'back' | 'legs';
+type Measure =
+  | "mass"
+  | "length"
+  | "area"
+  | "volume"
+  | "volume flow rate"
+  | "temperature"
+  | "time"
+  | "frequency"
+  | "speed"
+  | "pace"
+  | "pressure"
+  | "digital"
+  | "illuminance"
+  | "parts-per"
+  | "voltage"
+  | "current"
+  | "power"
+  | "apparent power"
+  | "reactive power"
+  | "energy"
+  | "reactive energy"
+  | "angle"
+  | "reps";
+
+type Category = "barbell" | "dumbbell" | "machine" | "weighted bodyweight";
+type BodyPart = "arms" | "back" | "legs";
 
 function getTransformer(): ValueTransformer {
   return {
@@ -26,7 +56,7 @@ function getTransformer(): ValueTransformer {
 
 @Entity()
 export class Exercise {
-  @PrimaryGeneratedColumn('uuid') id!: string;
+  @PrimaryGeneratedColumn("uuid") id!: string;
 
   @Column() name!: string;
 
@@ -35,22 +65,22 @@ export class Exercise {
   @Column() url!: string;
 
   @Column({
-    type: 'jsonb',
-    default: '{}',
+    type: "jsonb",
+    default: "{}",
     transformer: getTransformer()
   })
   measures!: Measure[];
 
   @Column({
-    type: 'jsonb',
-    default: '{}',
+    type: "jsonb",
+    default: "{}",
     transformer: getTransformer()
   })
   categories!: Category[];
 
   @Column({
-    type: 'jsonb',
-    default: '{}',
+    type: "jsonb",
+    default: "{}",
     transformer: getTransformer()
   })
   bodyParts!: BodyPart[];

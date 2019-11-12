@@ -1,18 +1,18 @@
-import { getRepository, IsNull } from 'typeorm';
-import { User } from './entities/user.entity';
-import { compare, hash } from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
-import { v4 as uuid } from 'uuid';
-import { ApolloError } from 'apollo-server';
-import { Trainer } from './entities/trainer.entity';
-import GraphQLJSON from 'graphql-type-json';
-import { GraphQLUpload } from 'graphql-upload';
+import { getRepository, IsNull } from "typeorm";
+import { User } from "./entities/user.entity";
+import { compare, hash } from "bcryptjs";
+import { sign } from "jsonwebtoken";
+import { v4 as uuid } from "uuid";
+import { ApolloError } from "apollo-server";
+import { Trainer } from "./entities/trainer.entity";
+import GraphQLJSON from "graphql-type-json";
+import { GraphQLUpload } from "graphql-upload";
 
-import { Exercise } from './entities/exercise.entity';
-import * as cloudinary from 'cloudinary';
-import { GraphQLScalarType, Kind } from 'graphql';
-import { ExerciseHistory } from './entities/exercise-history.entity';
-import { Workout } from './entities/workout.entity';
+import { Exercise } from "./entities/exercise.entity";
+import * as cloudinary from "cloudinary";
+import { GraphQLScalarType, Kind } from "graphql";
+import { ExerciseHistory } from "./entities/exercise-history.entity";
+import { Workout } from "./entities/workout.entity";
 
 function generateToken(user: any) {
   return sign(
@@ -34,13 +34,15 @@ async function processUpload(upload: any): Promise<string> {
 
   try {
     const url = await new Promise<string>((resolve, reject) => {
-      const streamLoad = cloudinary.v2.uploader.upload_stream((error: any, result: any) => {
-        if (result) {
-          resolve(result.secure_url);
-        } else {
-          reject(error);
+      const streamLoad = cloudinary.v2.uploader.upload_stream(
+        (error: any, result: any) => {
+          if (result) {
+            resolve(result.secure_url);
+          } else {
+            reject(error);
+          }
         }
-      });
+      );
       stream.pipe(streamLoad);
     });
     return url;
@@ -53,13 +55,13 @@ const resolvers = {
   Upload: GraphQLUpload,
   JSON: GraphQLJSON,
   Date: new GraphQLScalarType({
-    name: 'Date',
-    description: 'Date custom scalar type',
+    name: "Date",
+    description: "Date custom scalar type",
     parseValue(value) {
       return new Date(value); // value from the client
     },
     serialize(value) {
-      return value.toISOString(); // value sent to the client
+      return value; // value sent to the client
     },
     parseLiteral(ast) {
       if (ast.kind === Kind.INT) {
@@ -74,15 +76,24 @@ const resolvers = {
   Query: {
     me: (_, __, { user }) => getRepository(User).findOneOrFail(user.id),
     clients: (_, __, { user }) => {
-      return getRepository(User).find({ where: { trainerId: user.trainerProfileId } });
+      return getRepository(User).find({
+        where: { trainerId: user.trainerProfileId }
+      });
     },
     exercises: (_, __, { user }) => {
-      return getRepository(Exercise).find({ where: [{ userId: user.id }, { userId: IsNull() }] });
+      return getRepository(Exercise).find({
+        where: [{ userId: user.id }, { userId: IsNull() }]
+      });
     },
-    workouts: (_, __, { user }) => {
+    workouts: (_, args, { user }) => {
       return getRepository(Workout).find({
-        where: [{ trainerId: user.trainerProfileId }],
-        relations: ['exercises', 'user', 'exercises.exercise']
+        where: [
+          {
+            trainerId: user.trainerProfileId,
+            ...(args.userId && { userId: args.userId })
+          }
+        ],
+        relations: ["exercises", "user", "exercises.exercise"]
       });
     }
   },
@@ -92,14 +103,18 @@ const resolvers = {
       const user = await userRepository.findOneOrFail({ email });
       const passwordValid = await compare(password, user.password);
       if (!passwordValid) {
-        throw new Error('Invalid password');
+        throw new Error("Invalid password");
       }
       return {
         token: generateToken(user),
         user
       };
     },
-    signup: async (_, { firstName, lastName, email, password, isTrainer }, { mailer }) => {
+    signup: async (
+      _,
+      { firstName, lastName, email, password, isTrainer },
+      { mailer }
+    ) => {
       const hashedPassword = await hash(password, 10);
       const emailConfirmToken = uuid();
       const userRepository = getRepository(User);
@@ -123,7 +138,7 @@ const resolvers = {
       const newUser = await userRepository.save(user);
 
       mailer.send({
-        template: 'signupUser',
+        template: "signupUser",
         message: {
           to: newUser.email
         },
@@ -153,12 +168,12 @@ const resolvers = {
         email,
         inviteToken,
         trainerId: user.trainerProfileId,
-        password: '',
+        password: "",
         inviteAccepted: false
       });
 
       mailer.send({
-        template: 'inviteUser',
+        template: "inviteUser",
         message: {
           to: newUser.email
         },
@@ -171,19 +186,22 @@ const resolvers = {
 
       return newUser;
     },
-    signupByInvite: async (_, { email, password, inviteToken, firstName, lastName }) => {
+    signupByInvite: async (
+      _,
+      { email, password, inviteToken, firstName, lastName }
+    ) => {
       const userRepository = getRepository(User);
       const user = await userRepository.findOneOrFail({ email });
 
       if (user.inviteToken !== inviteToken || user.inviteAccepted) {
-        throw new ApolloError('Invalid invite token');
+        throw new ApolloError("Invalid invite token");
       }
 
       const hashedPassword = await hash(password, 10);
       const updatedUser = await userRepository.update(user.id, {
         firstName,
         lastName,
-        inviteToken: '',
+        inviteToken: "",
         inviteAccepted: true,
         password: hashedPassword
       });
@@ -224,9 +242,14 @@ const resolvers = {
       );
 
       const exerciseEntities = exercises.map(exercise =>
-        exerciseHistoryRepository.create({ ...exercise, workoutId: newWorkout.id })
+        exerciseHistoryRepository.create({
+          ...exercise,
+          workoutId: newWorkout.id
+        })
       );
-      const newExercises = await exerciseHistoryRepository.save(exerciseEntities);
+      const newExercises = await exerciseHistoryRepository.save(
+        exerciseEntities
+      );
 
       return { ...newWorkout, exercises: newExercises };
     }
