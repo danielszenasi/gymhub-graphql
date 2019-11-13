@@ -17,15 +17,6 @@ export const typeDef = gql`
       file: Upload
     ): Exercise
   }
-  input ExerciseHistoryInput {
-    exerciseId: String!
-    executed: JSON!
-  }
-  type ExerciseHistory {
-    id: ID!
-    executed: JSON
-    exercise: Exercise
-  }
   type Exercise {
     id: ID!
     name: String!

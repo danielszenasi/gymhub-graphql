@@ -7,7 +7,7 @@ import {
 } from "typeorm";
 import { User } from "./user.entity";
 
-type Measure =
+export type Measure =
   | "mass"
   | "length"
   | "area"

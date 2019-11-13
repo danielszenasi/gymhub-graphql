@@ -8,6 +8,7 @@ import { Exercise } from "./entities/exercise.entity";
 export const typeDef = gql`
   extend type Query {
     workouts(userId: String): [Workout]
+    getWorkout(id: String!): Workout
   }
   extend type Mutation {
     createWorkout(
@@ -16,6 +17,11 @@ export const typeDef = gql`
       exercises: [ExerciseHistoryInput!]!
     ): Workout
   }
+  input ExerciseHistoryInput {
+    id: ID!
+    exerciseId: String!
+    executed: JSON!
+  }
   type Workout {
     id: ID!
     startsAt: Date!
@@ -23,6 +29,12 @@ export const typeDef = gql`
     user: User
     categories: [String]
     bodyParts: [String]
+    exerciseHistory: [ExerciseHistory]
+  }
+  type ExerciseHistory {
+    id: ID!
+    executed: JSON!
+    exercise: Exercise
   }
 `;
 export const resolvers = {
@@ -37,6 +49,9 @@ export const resolvers = {
         ],
         relations: ["user"]
       });
+    },
+    getWorkout: (_, { id }, { loader }, info: GraphQLResolveInfo) => {
+      return loader.loadOne(Workout, { id }, info);
     }
   },
   Mutation: {

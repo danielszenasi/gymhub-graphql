@@ -1,11 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
-import { User } from './user.entity';
-import { Trainer } from './trainer.entity';
-import { ExerciseHistory } from './exercise-history.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany
+} from "typeorm";
+import { User } from "./user.entity";
+import { Trainer } from "./trainer.entity";
+import { ExerciseHistory } from "./exercise-history.entity";
 
 @Entity()
 export class Workout {
-  @PrimaryGeneratedColumn('uuid') id!: string;
+  @PrimaryGeneratedColumn("uuid") id!: string;
   @Column({ nullable: true }) note?: string;
 
   @ManyToOne(_ => User)
@@ -23,6 +29,9 @@ export class Workout {
   @Column()
   startsAt: Date;
 
-  @OneToMany(_ => ExerciseHistory, exerciseHistory => exerciseHistory.workout)
-  exercises: ExerciseHistory[];
+  @OneToMany(
+    _ => ExerciseHistory,
+    exerciseHistory => exerciseHistory.workout
+  )
+  exerciseHistory: ExerciseHistory[];
 }
