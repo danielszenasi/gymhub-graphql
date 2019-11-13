@@ -1,6 +1,4 @@
-import { ApolloServer } from "apollo-server";
-import typeDefs from "./schema";
-import resolvers from "./resolvers";
+import { ApolloServer, gql } from "apollo-server";
 import { createConnection } from "typeorm";
 import { verify } from "jsonwebtoken";
 import * as Email from "email-templates";
@@ -8,6 +6,14 @@ import * as nodemailer from "nodemailer";
 import * as postmarkTransport from "nodemailer-postmark-transport";
 import "reflect-metadata";
 import { GraphQLDatabaseLoader } from "@mando75/typeorm-graphql-loader";
+import resolvers from "./resolvers";
+import { typeDef as User, resolvers as userResolvers } from "./user";
+import {
+  typeDef as Exercise,
+  resolvers as exerciseResolvers
+} from "./exercise";
+import { typeDef as Workout, resolvers as workoutResolvers } from "./workout";
+import { merge } from "lodash";
 
 export function getUser(request: any) {
   const authorization = request.get("authorization");
@@ -23,6 +29,23 @@ export function getUser(request: any) {
   }
   return null;
 }
+
+const Scalar = gql`
+  scalar JSON
+  scalar Date
+`;
+
+const Query = gql`
+  type Query {
+    _empty: String
+  }
+`;
+
+const Mutation = gql`
+  type Mutation {
+    _empty: String
+  }
+`;
 
 createConnection().then(connection => {
   const context = async ({ req }) => {
@@ -46,9 +69,15 @@ createConnection().then(connection => {
 
     return { mailer, user, loader: new GraphQLDatabaseLoader(connection) };
   };
+
   const server = new ApolloServer({
-    typeDefs,
-    resolvers,
+    typeDefs: [Scalar, Query, Mutation, User, Exercise, Workout],
+    resolvers: merge(
+      resolvers,
+      userResolvers,
+      exerciseResolvers,
+      workoutResolvers
+    ),
     context
   });
 
@@ -60,7 +89,6 @@ createConnection().then(connection => {
 });
 
 module.exports = {
-  typeDefs,
   resolvers,
   ApolloServer
 };
