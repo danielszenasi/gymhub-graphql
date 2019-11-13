@@ -1,4 +1,4 @@
-import { getRepository, IsNull } from "typeorm";
+import { getRepository, IsNull, In } from "typeorm";
 import { User } from "./entities/user.entity";
 import { compare, hash } from "bcryptjs";
 import { sign } from "jsonwebtoken";
@@ -10,7 +10,7 @@ import { GraphQLUpload } from "graphql-upload";
 
 import { Exercise } from "./entities/exercise.entity";
 import * as cloudinary from "cloudinary";
-import { GraphQLScalarType, Kind } from "graphql";
+import { GraphQLScalarType, Kind, GraphQLResolveInfo } from "graphql";
 import { ExerciseHistory } from "./entities/exercise-history.entity";
 import { Workout } from "./entities/workout.entity";
 
@@ -255,22 +255,34 @@ const resolvers = {
     }
   },
   Workout: {
-    categories: async (parent: Workout) => {
-      const exerciseHistoryRepository = getRepository(ExerciseHistory);
-      const exerciseRepository = getRepository(Exercise);
-      const exerciseHistories = await exerciseHistoryRepository.find({
-        where: { workoutId: parent }
-      });
+    categories: async (
+      parent: Workout,
+      _,
+      context: any,
+      info: GraphQLResolveInfo
+    ) => {
+      const exerciseHistories = await context.loader.loadMany(
+        ExerciseHistory,
+        {
+          workoutId: parent
+        },
+        info,
+        { requiredSelectFields: ["exerciseId"] }
+      );
       const ids = exerciseHistories.map(
         exerciseHistories => exerciseHistories.exerciseId
       );
       const uniqueIds = new Set(ids);
-      const exercises = await exerciseRepository.findByIds(
-        Array.from(uniqueIds),
+
+      const exercises = await context.loader.loadMany(
+        Exercise,
         {
-          select: ["id", "categories"]
-        }
+          id: In(Array.from(uniqueIds))
+        },
+        info,
+        { requiredSelectFields: ["id", "categories", "bodyParts"] }
       );
+
       return Array.from(
         exercises.reduce((set, exercise) => {
           exercise.categories.forEach(category => set.add(category));
@@ -278,22 +290,35 @@ const resolvers = {
         }, new Set())
       );
     },
-    bodyParts: async (parent: Workout) => {
-      const exerciseHistoryRepository = getRepository(ExerciseHistory);
-      const exerciseRepository = getRepository(Exercise);
-      const exerciseHistories = await exerciseHistoryRepository.find({
-        where: { workoutId: parent }
-      });
+    bodyParts: async (
+      parent: Workout,
+      _,
+      context: any,
+      info: GraphQLResolveInfo
+    ) => {
+      const exerciseHistories = await context.loader.loadMany(
+        ExerciseHistory,
+        {
+          workoutId: parent
+        },
+        info,
+        { requiredSelectFields: ["exerciseId"] }
+      );
       const ids = exerciseHistories.map(
         exerciseHistories => exerciseHistories.exerciseId
       );
       const uniqueIds = new Set(ids);
-      const exercises = await exerciseRepository.findByIds(
-        Array.from(uniqueIds),
+
+      const exercises = await context.loader.loadMany(
+        Exercise,
         {
-          select: ["id", "bodyParts"]
-        }
+          id: In(Array.from(uniqueIds))
+        },
+        info,
+        { requiredSelectFields: ["id", "categories", "bodyParts"] }
       );
+      console.log(exercises);
+
       return Array.from(
         exercises.reduce((set, exercise) => {
           exercise.bodyParts.forEach(bodyPart => set.add(bodyPart));
