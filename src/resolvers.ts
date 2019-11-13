@@ -93,7 +93,7 @@ const resolvers = {
             ...(args.userId && { userId: args.userId })
           }
         ],
-        relations: ["exercises", "user", "exercises.exercise"]
+        relations: ["user"]
       });
     }
   },
@@ -252,6 +252,54 @@ const resolvers = {
       );
 
       return { ...newWorkout, exercises: newExercises };
+    }
+  },
+  Workout: {
+    categories: async (parent: Workout) => {
+      const exerciseHistoryRepository = getRepository(ExerciseHistory);
+      const exerciseRepository = getRepository(Exercise);
+      const exerciseHistories = await exerciseHistoryRepository.find({
+        where: { workoutId: parent }
+      });
+      const ids = exerciseHistories.map(
+        exerciseHistories => exerciseHistories.exerciseId
+      );
+      const uniqueIds = new Set(ids);
+      const exercises = await exerciseRepository.findByIds(
+        Array.from(uniqueIds),
+        {
+          select: ["id", "categories"]
+        }
+      );
+      return Array.from(
+        exercises.reduce((set, exercise) => {
+          exercise.categories.forEach(category => set.add(category));
+          return set;
+        }, new Set())
+      );
+    },
+    bodyParts: async (parent: Workout) => {
+      const exerciseHistoryRepository = getRepository(ExerciseHistory);
+      const exerciseRepository = getRepository(Exercise);
+      const exerciseHistories = await exerciseHistoryRepository.find({
+        where: { workoutId: parent }
+      });
+      const ids = exerciseHistories.map(
+        exerciseHistories => exerciseHistories.exerciseId
+      );
+      const uniqueIds = new Set(ids);
+      const exercises = await exerciseRepository.findByIds(
+        Array.from(uniqueIds),
+        {
+          select: ["id", "bodyParts"]
+        }
+      );
+      return Array.from(
+        exercises.reduce((set, exercise) => {
+          exercise.bodyParts.forEach(bodyPart => set.add(bodyPart));
+          return set;
+        }, new Set())
+      );
     }
   }
 };

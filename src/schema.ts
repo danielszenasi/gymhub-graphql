@@ -55,8 +55,9 @@ const typeDefs = gql`
     id: ID!
     startsAt: Date!
     note: String
-    exercises: [ExerciseHistory]
     user: User
+    categories: [String]
+    bodyParts: [String]
   }
   type ExerciseHistory {
     id: ID!
