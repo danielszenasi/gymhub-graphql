@@ -34,6 +34,7 @@ export const typeDef = gql`
     id: ID!
     email: String!
     inviteAccepted: Boolean!
+    units: JSON!
     firstName: String
     lastName: String
   }

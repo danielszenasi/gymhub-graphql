@@ -6,13 +6,13 @@ import {
   OneToOne,
   JoinColumn,
   ManyToOne
-} from 'typeorm';
+} from "typeorm";
 
-import { Trainer } from './trainer.entity';
+import { Trainer } from "./trainer.entity";
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn('uuid') id!: string;
+  @PrimaryGeneratedColumn("uuid") id!: string;
 
   @Column() email!: string;
 
@@ -64,4 +64,7 @@ export class User {
 
   @Column({ default: false })
   isSuper!: boolean;
+
+  @Column({ type: "jsonb", default: { mass: "kg", length: "m" } })
+  units!: any;
 }
