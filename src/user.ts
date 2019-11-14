@@ -5,7 +5,7 @@ import { Trainer } from "./entities/trainer.entity";
 import { User } from "./entities/user.entity";
 import { compare, hash } from "bcryptjs";
 import { getRepository } from "typeorm";
-import { generateToken } from "utils";
+import { generateToken } from "./utils";
 
 export const typeDef = gql`
   extend type Query {

@@ -1,7 +1,7 @@
 import { gql } from "apollo-server";
-import { processUpload } from "utils";
+import { processUpload } from "./utils";
 import { getRepository, IsNull } from "typeorm";
-import { Exercise } from "entities/exercise.entity";
+import { Exercise } from "./entities/exercise.entity";
 
 export const typeDef = gql`
   extend type Query {
