@@ -6,7 +6,10 @@ import { Workout } from "./workout.entity";
 export class ExerciseHistory {
   @PrimaryGeneratedColumn("uuid") id!: string;
 
-  @ManyToOne(_ => Exercise)
+  @ManyToOne(
+    _ => Exercise,
+    exercise => exercise.exerciseHistory
+  )
   exercise!: Exercise;
 
   @Column() exerciseId!: string;

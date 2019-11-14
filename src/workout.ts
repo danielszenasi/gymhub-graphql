@@ -8,7 +8,7 @@ import { Exercise } from "./entities/exercise.entity";
 export const typeDef = gql`
   extend type Query {
     workouts(userId: String): [Workout]
-    getWorkout(id: String!): Workout
+    getWorkout(id: ID!): Workout
   }
   extend type Mutation {
     createWorkout(

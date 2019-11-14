@@ -2,10 +2,12 @@ import { gql } from "apollo-server";
 import { processUpload } from "./utils";
 import { getRepository, IsNull } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
+import { ExerciseHistory } from "entities/exercise-history.entity";
 
 export const typeDef = gql`
   extend type Query {
     exercises: [Exercise]
+    getExercise(id: ID!): Exercise
   }
   extend type Mutation {
     createExercise(
@@ -25,14 +27,20 @@ export const typeDef = gql`
     measures: JSON!
     categories: JSON!
     bodyParts: JSON!
+    history(userId: ID): [ExerciseHistory]
   }
 `;
 export const resolvers = {
   Query: {
-    exercises: (_, __, { user }) => {
-      return getRepository(Exercise).find({
-        where: [{ userId: user.id }, { userId: IsNull() }]
-      });
+    exercises: (_, __, { user, loader }, info) => {
+      return loader.loadMany(
+        Exercise,
+        [{ userId: user.id }, { userId: IsNull() }],
+        info
+      );
+    },
+    getExercise: (_, { id }, { loader }, info) => {
+      return loader.loadOne(Exercise, { id }, info);
     }
   },
   Mutation: {
@@ -53,6 +61,18 @@ export const resolvers = {
         userId: user ? user.id : null
       });
       return newExercise;
+    }
+  },
+  Exercise: {
+    history: (exercise: Exercise, { userId }) => {
+      return getRepository(ExerciseHistory)
+        .createQueryBuilder("exerciseHistory")
+        .innerJoin("exerciseHistory.workout", "workout")
+        .where("exerciseHistory.exerciseId = :exerciseId", {
+          exerciseId: exercise.id
+        })
+        .andWhere("workout.userId = :userId", { userId })
+        .getMany();
     }
   }
 };

@@ -3,9 +3,11 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  ValueTransformer
+  ValueTransformer,
+  OneToMany
 } from "typeorm";
 import { User } from "./user.entity";
+import { ExerciseHistory } from "./exercise-history.entity";
 
 export type Measure =
   | "mass"
@@ -89,4 +91,10 @@ export class Exercise {
   user?: User;
 
   @Column({ nullable: true }) userId?: string;
+
+  @OneToMany(
+    _ => ExerciseHistory,
+    exerciseHistory => exerciseHistory.exercise
+  )
+  exerciseHistory!: ExerciseHistory[];
 }
