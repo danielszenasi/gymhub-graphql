@@ -62,8 +62,7 @@ createConnection().then(connection => {
       message: {
         from: "no-reply@gymhub.io"
       },
-      // uncomment below to send emails in development/test env:
-      // send: true
+      send: true,
       transport
     });
 
