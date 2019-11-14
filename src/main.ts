@@ -77,7 +77,9 @@ createConnection().then(connection => {
       exerciseResolvers,
       workoutResolvers
     ),
-    context
+    context,
+    introspection: true,
+    playground: true
   });
 
   if (process.env.NODE_ENV !== "test") {
