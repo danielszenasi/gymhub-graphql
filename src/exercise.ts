@@ -1,12 +1,12 @@
 import { gql } from "apollo-server";
 import { processUpload } from "./utils";
-import { getRepository, IsNull } from "typeorm";
+import { getRepository, IsNull, In } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
 import { ExerciseHistory } from "./entities/exercise-history.entity";
 
 export const typeDef = gql`
   extend type Query {
-    exercises: [Exercise]
+    getExercises(ids: [String]): [Exercise]
     getExercise(id: ID!): Exercise
   }
   extend type Mutation {
@@ -32,10 +32,13 @@ export const typeDef = gql`
 `;
 export const resolvers = {
   Query: {
-    exercises: (_, __, { user, loader }, info) => {
+    getExercises: (_, { ids }, { user, loader }, info) => {
       return loader.loadMany(
         Exercise,
-        [{ userId: user.id }, { userId: IsNull() }],
+        [
+          { userId: user.id, ...(ids && { id: In(ids) }) },
+          { userId: IsNull(), ...(ids && { id: In(ids) }) }
+        ],
         info
       );
     },
