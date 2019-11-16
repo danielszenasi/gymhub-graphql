@@ -7,7 +7,7 @@ import { Exercise } from "./entities/exercise.entity";
 
 export const typeDef = gql`
   extend type Query {
-    workouts(userId: String): [Workout]
+    getWorkouts(userId: String, ids: [String]): [Workout]
     getWorkout(id: ID!): Workout
   }
   extend type Mutation {
@@ -39,16 +39,16 @@ export const typeDef = gql`
 `;
 export const resolvers = {
   Query: {
-    workouts: (_, args, { user }) => {
-      return getRepository(Workout).find({
-        where: [
-          {
-            trainerId: user.trainerProfileId,
-            ...(args.userId && { userId: args.userId })
-          }
-        ],
-        relations: ["user"]
-      });
+    getWorkouts: (_, args, { user, loader }, info: GraphQLResolveInfo) => {
+      return loader.loadMany(
+        Workout,
+        {
+          trainerId: user.trainerProfileId,
+          ...(args.userId && { userId: args.userId }),
+          ...(args.ids && { id: In(args.ids) })
+        },
+        info
+      );
     },
     getWorkout: (_, { id }, { loader }, info: GraphQLResolveInfo) => {
       return loader.loadOne(Workout, { id }, info);
