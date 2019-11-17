@@ -13,9 +13,9 @@ export const typeDef = gql`
     createExercise(
       name: String!
       instructions: String!
-      measures: JSON!
-      categories: JSON!
-      bodyParts: JSON!
+      measures: [String]!
+      categories: [String]!
+      bodyParts: [String]!
       file: Upload
     ): Exercise
   }
