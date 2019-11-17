@@ -18,8 +18,7 @@ export const typeDef = gql`
     ): Workout
   }
   input ExerciseHistoryInput {
-    id: ID!
-    exerciseId: String!
+    exerciseId: ID!
     executed: JSON!
   }
   type Workout {
