@@ -15,11 +15,13 @@ export const typeDef = gql`
     createWorkout(
       startsAt: Date!
       userId: String
+      name: String
       exercises: [ExerciseHistoryInput!]!
     ): Workout
     updateWorkout(
       workoutId: ID!
       startsAt: Date
+      name: String
       state: WorkoutState
       exercises: [ExerciseHistoryInput!]!
     ): Workout
@@ -34,6 +36,7 @@ export const typeDef = gql`
   }
   type Workout {
     id: ID!
+    name: String
     startsAt: Date!
     state: WorkoutState
     note: String
@@ -44,6 +47,7 @@ export const typeDef = gql`
   }
   type ExerciseHistory {
     id: ID!
+    workout: Workout
     executed: JSON!
     exercise: Exercise
   }
@@ -88,12 +92,17 @@ export const resolvers = {
     }
   },
   Mutation: {
-    createWorkout: async (_, { startsAt, exercises, userId }, { user }) => {
+    createWorkout: async (
+      _,
+      { name, startsAt, exercises, userId },
+      { user }
+    ) => {
       const exerciseHistoryRepository = getRepository(ExerciseHistory);
       const workoutRepository = getRepository(Workout);
 
       const newWorkout = await workoutRepository.save(
         workoutRepository.create({
+          name,
           startsAt,
           userId,
           trainerId: user.trainerProfileId
@@ -114,7 +123,7 @@ export const resolvers = {
     },
     updateWorkout: async (
       _,
-      { startsAt, exercises, workoutId, state },
+      { name, startsAt, exercises, workoutId, state },
       { user }
     ) => {
       const exerciseHistoryRepository = getRepository(ExerciseHistory);
@@ -126,6 +135,7 @@ export const resolvers = {
           id: workoutId,
           state: state,
           startsAt,
+          name,
           trainerId: user.trainerProfileId
         })
       );

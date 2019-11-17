@@ -17,6 +17,9 @@ export enum WorkoutState {
 @Entity()
 export class Workout {
   @PrimaryGeneratedColumn("uuid") id!: string;
+
+  @Column({ nullable: true }) name?: string;
+
   @Column({ nullable: true }) note?: string;
 
   @Column({

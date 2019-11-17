@@ -70,7 +70,7 @@ export const resolvers = {
     history: (exercise: Exercise, { userId }) => {
       return getRepository(ExerciseHistory)
         .createQueryBuilder("exerciseHistory")
-        .innerJoin("exerciseHistory.workout", "workout")
+        .innerJoinAndSelect("exerciseHistory.workout", "workout")
         .where("exerciseHistory.exerciseId = :exerciseId", {
           exerciseId: exercise.id
         })
