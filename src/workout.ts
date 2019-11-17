@@ -20,9 +20,13 @@ export const typeDef = gql`
     updateWorkout(
       workoutId: ID!
       startsAt: Date
-      state: String
+      state: WorkoutState
       exercises: [ExerciseHistoryInput!]!
     ): Workout
+  }
+  enum WorkoutState {
+    CREATED
+    FINISHED
   }
   input ExerciseHistoryInput {
     exerciseId: ID!
@@ -31,6 +35,7 @@ export const typeDef = gql`
   type Workout {
     id: ID!
     startsAt: Date!
+    state: WorkoutState
     note: String
     user: User
     categories: [String]

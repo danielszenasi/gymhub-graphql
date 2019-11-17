@@ -10,8 +10,8 @@ import { Trainer } from "./trainer.entity";
 import { ExerciseHistory } from "./exercise-history.entity";
 
 export enum WorkoutState {
-  CREATED = "created",
-  FINISHED = "finished"
+  CREATED = "CREATED",
+  FINISHED = "FINISHED"
 }
 
 @Entity()
