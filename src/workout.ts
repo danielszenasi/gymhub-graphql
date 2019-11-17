@@ -4,7 +4,7 @@ import { Workout } from "./entities/workout.entity";
 import { GraphQLResolveInfo } from "graphql";
 import { getRepository, In, Raw } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 
 export const typeDef = gql`
   extend type Query {
@@ -40,7 +40,7 @@ export const typeDef = gql`
 export const resolvers = {
   Query: {
     getWorkouts: (_, args, { user, loader }, info: GraphQLResolveInfo) => {
-      if (args.startsAt) {
+      if (args.startsAt && isValid(new Date(args.startsAt))) {
         const startsAt = Raw(alias => {
           const aliasWithQuote = alias
             .split(".")
