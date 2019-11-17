@@ -22,6 +22,7 @@
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.16.0",
     "convert-units": "^2.3.4",
+    "date-fns": "^2.7.0",
     "email-templates": "^6.0.3",
     "graphql": "^14.5.8",
     "graphql-type-json": "^0.3.0",

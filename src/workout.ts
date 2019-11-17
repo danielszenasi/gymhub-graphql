@@ -2,12 +2,13 @@ import { gql } from "apollo-server";
 import { ExerciseHistory } from "./entities/exercise-history.entity";
 import { Workout } from "./entities/workout.entity";
 import { GraphQLResolveInfo } from "graphql";
-import { getRepository, In } from "typeorm";
+import { getRepository, In, Raw } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
+import { format } from "date-fns";
 
 export const typeDef = gql`
   extend type Query {
-    getWorkouts(userId: String): [Workout]
+    getWorkouts(userId: String, startsAt: Date): [Workout]
     getWorkout(id: ID!): Workout
   }
   extend type Mutation {
@@ -39,6 +40,29 @@ export const typeDef = gql`
 export const resolvers = {
   Query: {
     getWorkouts: (_, args, { user, loader }, info: GraphQLResolveInfo) => {
+      if (args.startsAt) {
+        const startsAt = Raw(alias => {
+          const aliasWithQuote = alias
+            .split(".")
+            .map(v => `"${v}"`)
+            .join(".");
+          return `${aliasWithQuote}::date = '${format(
+            new Date(args.startsAt),
+            "yyyy-MM-dd"
+          )}'`;
+        });
+
+        return loader.loadMany(
+          Workout,
+          {
+            trainerId: user.trainerProfileId,
+            ...(args.userId && { userId: args.userId }),
+            startsAt
+          },
+          info
+        );
+      }
+
       return loader.loadMany(
         Workout,
         {
