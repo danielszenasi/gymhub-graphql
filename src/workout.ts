@@ -17,6 +17,12 @@ export const typeDef = gql`
       userId: String
       exercises: [ExerciseHistoryInput!]!
     ): Workout
+    updateWorkout(
+      workoutId: ID!
+      startsAt: Date
+      state: String
+      exercises: [ExerciseHistoryInput!]!
+    ): Workout
   }
   input ExerciseHistoryInput {
     exerciseId: ID!
@@ -85,6 +91,36 @@ export const resolvers = {
         workoutRepository.create({
           startsAt,
           userId,
+          trainerId: user.trainerProfileId
+        })
+      );
+
+      const exerciseEntities = exercises.map(exercise =>
+        exerciseHistoryRepository.create({
+          ...exercise,
+          workoutId: newWorkout.id
+        })
+      );
+      const newExercises = await exerciseHistoryRepository.save(
+        exerciseEntities
+      );
+
+      return { ...newWorkout, exercises: newExercises };
+    },
+    updateWorkout: async (
+      _,
+      { startsAt, exercises, workoutId, state },
+      { user }
+    ) => {
+      const exerciseHistoryRepository = getRepository(ExerciseHistory);
+      const workoutRepository = getRepository(Workout);
+      await exerciseHistoryRepository.delete({ workoutId });
+
+      const newWorkout = await workoutRepository.save(
+        workoutRepository.create({
+          id: workoutId,
+          state: state,
+          startsAt,
           trainerId: user.trainerProfileId
         })
       );

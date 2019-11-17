@@ -9,10 +9,22 @@ import { User } from "./user.entity";
 import { Trainer } from "./trainer.entity";
 import { ExerciseHistory } from "./exercise-history.entity";
 
+export enum WorkoutState {
+  CREATED = "created",
+  FINISHED = "finished"
+}
+
 @Entity()
 export class Workout {
   @PrimaryGeneratedColumn("uuid") id!: string;
   @Column({ nullable: true }) note?: string;
+
+  @Column({
+    type: "enum",
+    enum: WorkoutState,
+    default: WorkoutState.CREATED
+  })
+  state: WorkoutState;
 
   @ManyToOne(_ => User)
   user!: User;
