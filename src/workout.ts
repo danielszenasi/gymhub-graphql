@@ -8,14 +8,16 @@ import { format, isValid } from "date-fns";
 
 export const typeDef = gql`
   extend type Query {
-    getWorkouts(userId: String, startsAt: Date): [Workout]
+    getWorkouts(state: WorkoutState, userId: String, startsAt: Date): [Workout]
     getWorkout(id: ID!): Workout
   }
   extend type Mutation {
     createWorkout(
-      startsAt: Date!
+      startsAt: Date
+      state: WorkoutState!
       userId: String
       name: String
+      planWorkoutId: ID
       exercises: [ExerciseHistoryInput!]!
     ): Workout
     updateWorkout(
@@ -27,7 +29,7 @@ export const typeDef = gql`
     ): Workout
   }
   enum WorkoutState {
-    CREATED
+    PLANNED
     FINISHED
   }
   input ExerciseHistoryInput {
@@ -72,6 +74,7 @@ export const resolvers = {
           {
             trainerId: user.trainerProfileId,
             ...(args.userId && { userId: args.userId }),
+            ...(args.state && { state: args.state }),
             startsAt
           },
           info
@@ -82,7 +85,8 @@ export const resolvers = {
         Workout,
         {
           trainerId: user.trainerProfileId,
-          ...(args.userId && { userId: args.userId })
+          ...(args.userId && { userId: args.userId }),
+          ...(args.state && { state: args.state })
         },
         info
       );
@@ -94,7 +98,7 @@ export const resolvers = {
   Mutation: {
     createWorkout: async (
       _,
-      { name, startsAt, exercises, userId },
+      { name, startsAt, exercises, userId, state, planWorkoutId },
       { user }
     ) => {
       const exerciseHistoryRepository = getRepository(ExerciseHistory);
@@ -103,9 +107,11 @@ export const resolvers = {
       const newWorkout = await workoutRepository.save(
         workoutRepository.create({
           name,
+          state,
           startsAt,
           userId,
-          trainerId: user.trainerProfileId
+          trainerId: user.trainerProfileId,
+          parent: planWorkoutId
         })
       );
 

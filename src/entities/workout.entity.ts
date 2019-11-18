@@ -10,7 +10,7 @@ import { Trainer } from "./trainer.entity";
 import { ExerciseHistory } from "./exercise-history.entity";
 
 export enum WorkoutState {
-  CREATED = "CREATED",
+  PLANNED = "PLANNED",
   FINISHED = "FINISHED"
 }
 
@@ -25,7 +25,7 @@ export class Workout {
   @Column({
     type: "enum",
     enum: WorkoutState,
-    default: WorkoutState.CREATED
+    default: WorkoutState.PLANNED
   })
   state: WorkoutState;
 
@@ -41,7 +41,7 @@ export class Workout {
   @Column()
   trainerId!: string;
 
-  @Column()
+  @Column({ nullable: true })
   startsAt: Date;
 
   @OneToMany(
@@ -49,4 +49,16 @@ export class Workout {
     exerciseHistory => exerciseHistory.workout
   )
   exerciseHistory: ExerciseHistory[];
+
+  @ManyToOne(
+    _ => Workout,
+    workout => workout.children
+  )
+  parent: Workout;
+
+  @OneToMany(
+    _ => Workout,
+    workout => workout.parent
+  )
+  children: Workout[];
 }

@@ -62,7 +62,7 @@ createConnection().then(connection => {
       message: {
         from: "no-reply@gymhub.io"
       },
-      send: true,
+      // send: true,
       transport
     });
 
