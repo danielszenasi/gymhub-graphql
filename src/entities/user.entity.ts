@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 
 import { Trainer } from "./trainer.entity";
+import { WorkoutPlan } from "./workout-plan.entity";
 
 @Entity()
 export class User {
@@ -67,4 +68,10 @@ export class User {
 
   @Column({ type: "jsonb", default: { mass: "kg", length: "m" } })
   units!: any;
+
+  @ManyToOne(_ => WorkoutPlan)
+  workoutPlan!: WorkoutPlan;
+
+  @Column({ nullable: true })
+  public workoutPlanId?: string;
 }

@@ -13,6 +13,11 @@ import {
   resolvers as exerciseResolvers
 } from "./exercise";
 import { typeDef as Workout, resolvers as workoutResolvers } from "./workout";
+import {
+  typeDef as WorkoutPlan,
+  resolvers as workoutPlanResolvers
+} from "./workout-plan";
+
 import { merge } from "lodash";
 
 export function getUser(request: any) {
@@ -70,12 +75,13 @@ createConnection().then(connection => {
   };
 
   const server = new ApolloServer({
-    typeDefs: [Scalar, Query, Mutation, User, Exercise, Workout],
+    typeDefs: [Scalar, Query, Mutation, User, Exercise, Workout, WorkoutPlan],
     resolvers: merge(
       resolvers,
       userResolvers,
       exerciseResolvers,
-      workoutResolvers
+      workoutResolvers,
+      workoutPlanResolvers
     ),
     context,
     introspection: true,

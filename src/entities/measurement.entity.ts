@@ -2,4 +2,4 @@ import { ChildEntity } from "typeorm";
 import { Assignment } from "./assignment.entity";
 
 @ChildEntity()
-export class Exercise extends Assignment {}
+export class Measurement extends Assignment {}

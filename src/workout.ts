@@ -1,5 +1,5 @@
 import { gql } from "apollo-server";
-import { ExerciseHistory } from "./entities/exercise-history.entity";
+import { AssignmentHistory } from "./entities/assignment-history.entity";
 import { Workout } from "./entities/workout.entity";
 import { GraphQLResolveInfo } from "graphql";
 import { getRepository, In, Raw, IsNull } from "typeorm";
@@ -44,19 +44,19 @@ export const typeDef = gql`
   type Workout {
     id: ID!
     name: String
-    startsAt: Date!
+    startsAt: Date
     state: WorkoutState
     note: String
     user: User
     categories: [String]
     bodyParts: [String]
-    exerciseHistory: [ExerciseHistory]
+    assignmentHistories: [AssignmentHistory]
   }
-  type ExerciseHistory {
+  type AssignmentHistory {
     id: ID!
-    workout: Workout
+    assignmentGroup: Workout
     executed: JSON!
-    exercise: Exercise
+    assignment: Exercise
   }
 `;
 export const resolvers = {
@@ -113,10 +113,10 @@ export const resolvers = {
   Mutation: {
     createWorkout: async (
       _,
-      { name, startsAt, exercises, userId, state, planWorkoutId },
+      { name, startsAt, exercises, userId, state },
       { user }
     ) => {
-      const exerciseHistoryRepository = getRepository(ExerciseHistory);
+      const assignmentHistoryRepository = getRepository(AssignmentHistory);
       const workoutRepository = getRepository(Workout);
 
       const newWorkout = await workoutRepository.save(
@@ -125,18 +125,19 @@ export const resolvers = {
           state,
           startsAt,
           userId,
-          trainerId: user.trainerProfileId,
-          parent: planWorkoutId
+          trainerId: user.trainerProfileId
         })
       );
 
-      const exerciseEntities = exercises.map(exercise =>
-        exerciseHistoryRepository.create({
-          ...exercise,
-          workoutId: newWorkout.id
+      const exerciseEntities = exercises.map((exercise, index) =>
+        assignmentHistoryRepository.create({
+          executed: exercise.executed,
+          assignmentId: exercise.exerciseId,
+          order: index,
+          assignmentGroupId: newWorkout.id
         })
       );
-      const newExercises = await exerciseHistoryRepository.save(
+      const newExercises = await assignmentHistoryRepository.save(
         exerciseEntities
       );
 
@@ -147,9 +148,11 @@ export const resolvers = {
       { name, startsAt, exercises, workoutId, state },
       { user }
     ) => {
-      const exerciseHistoryRepository = getRepository(ExerciseHistory);
+      const assignmentHistoryRepository = getRepository(AssignmentHistory);
       const workoutRepository = getRepository(Workout);
-      await exerciseHistoryRepository.delete({ workoutId });
+      await assignmentHistoryRepository.delete({
+        assignmentGroupId: workoutId
+      });
 
       const newWorkout = await workoutRepository.save(
         workoutRepository.create({
@@ -161,13 +164,15 @@ export const resolvers = {
         })
       );
 
-      const exerciseEntities = exercises.map(exercise =>
-        exerciseHistoryRepository.create({
-          ...exercise,
-          workoutId: newWorkout.id
+      const exerciseEntities = exercises.map((exercise, index) =>
+        assignmentHistoryRepository.create({
+          executed: exercise.executed,
+          assignmentId: exercise.exerciseId,
+          order: index,
+          assignmentGroupId: newWorkout.id
         })
       );
-      const newExercises = await exerciseHistoryRepository.save(
+      const newExercises = await assignmentHistoryRepository.save(
         exerciseEntities
       );
 
@@ -176,21 +181,21 @@ export const resolvers = {
   },
   Workout: {
     categories: async (
-      parent: Workout,
+      workout: Workout,
       _,
       context: any,
       info: GraphQLResolveInfo
     ) => {
       const exerciseHistories = await context.loader.loadMany(
-        ExerciseHistory,
+        AssignmentHistory,
         {
-          workoutId: parent
+          assignmentGroupId: workout.id
         },
         info,
-        { requiredSelectFields: ["exerciseId"] }
+        { requiredSelectFields: ["assignmentId"] }
       );
       const ids = exerciseHistories.map(
-        exerciseHistories => exerciseHistories.exerciseId
+        exerciseHistories => exerciseHistories.assignmentId
       );
       const uniqueIds = new Set(ids);
 
@@ -217,15 +222,15 @@ export const resolvers = {
       info: GraphQLResolveInfo
     ) => {
       const exerciseHistories = await context.loader.loadMany(
-        ExerciseHistory,
+        AssignmentHistory,
         {
           workoutId: parent
         },
         info,
-        { requiredSelectFields: ["exerciseId"] }
+        { requiredSelectFields: ["assignmentId"] }
       );
       const ids = exerciseHistories.map(
-        exerciseHistories => exerciseHistories.exerciseId
+        exerciseHistories => exerciseHistories.assignmentId
       );
       const uniqueIds = new Set(ids);
 
