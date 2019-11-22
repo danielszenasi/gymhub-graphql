@@ -44,7 +44,7 @@ export const typeDef = gql`
   type Workout {
     id: ID!
     name: String
-    startsAt: Date!
+    startsAt: Date
     state: WorkoutState
     note: String
     user: User
