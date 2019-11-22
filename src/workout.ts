@@ -2,13 +2,13 @@ import { gql } from "apollo-server";
 import { ExerciseHistory } from "./entities/exercise-history.entity";
 import { Workout } from "./entities/workout.entity";
 import { GraphQLResolveInfo } from "graphql";
-import { getRepository, In, Raw } from "typeorm";
+import { getRepository, In, Raw, IsNull } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
 import { format, isValid } from "date-fns";
 
 export const typeDef = gql`
   extend type Query {
-    getWorkouts(state: WorkoutState, userId: String, startsAt: Date): [Workout]
+    getWorkouts(type: WorkoutType, userId: String, startsAt: Date): [Workout]
     getWorkout(id: ID!): Workout
   }
   extend type Mutation {
@@ -27,6 +27,11 @@ export const typeDef = gql`
       state: WorkoutState
       exercises: [ExerciseHistoryInput!]!
     ): Workout
+  }
+  enum WorkoutType {
+    COMMON
+    PLANNED
+    FINISHED
   }
   enum WorkoutState {
     PLANNED
@@ -57,6 +62,16 @@ export const typeDef = gql`
 export const resolvers = {
   Query: {
     getWorkouts: (_, args, { user, loader }, info: GraphQLResolveInfo) => {
+      if (args.type && args.type === "COMMON") {
+        return loader.loadMany(
+          Workout,
+          {
+            trainerId: user.trainerProfileId,
+            userId: IsNull()
+          },
+          info
+        );
+      }
       if (args.startsAt && isValid(new Date(args.startsAt))) {
         const startsAt = Raw(alias => {
           const aliasWithQuote = alias
@@ -74,7 +89,7 @@ export const resolvers = {
           {
             trainerId: user.trainerProfileId,
             ...(args.userId && { userId: args.userId }),
-            ...(args.state && { state: args.state }),
+            ...(args.type && { state: args.type }),
             startsAt
           },
           info
@@ -86,7 +101,7 @@ export const resolvers = {
         {
           trainerId: user.trainerProfileId,
           ...(args.userId && { userId: args.userId }),
-          ...(args.state && { state: args.state })
+          ...(args.type && { state: args.type })
         },
         info
       );
