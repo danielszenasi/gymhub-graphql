@@ -32,7 +32,7 @@ export class Workout {
   @ManyToOne(_ => User)
   user!: User;
 
-  @Column()
+  @Column({ nullable: true })
   userId!: string;
 
   @ManyToOne(_ => Trainer)
