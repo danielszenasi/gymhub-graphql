@@ -72,9 +72,8 @@ export const resolvers = {
     createWorkout: async (
       _,
       { name, startsAt, exercises, userId, state },
-      { user }: Context
+      { user, assignmentGroupService }: Context
     ) => {
-      const assignmentHistoryRepository = getRepository(AssignmentHistory);
       const workoutRepository = getRepository(Workout);
 
       const newWorkout = await workoutRepository.save(
@@ -87,16 +86,9 @@ export const resolvers = {
         })
       );
 
-      const exerciseEntities = exercises.map((exercise, index) =>
-        assignmentHistoryRepository.create({
-          executed: exercise.executed,
-          assignmentId: exercise.exerciseId,
-          order: index,
-          assignmentGroupId: newWorkout.id
-        })
-      );
-      const newExercises = await assignmentHistoryRepository.save(
-        exerciseEntities
+      const newExercises = await assignmentGroupService.saveHistory(
+        newWorkout.id,
+        exercises
       );
 
       return { ...newWorkout, exercises: newExercises };

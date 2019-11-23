@@ -1,4 +1,4 @@
-import { IsNull, Raw, In } from "typeorm";
+import { IsNull, Raw, In, getRepository } from "typeorm";
 import { isValid, format } from "date-fns";
 import { AssignmentHistory } from "entities/assignment-history.entity";
 import { Assignment } from "entities/assignment.entity";
@@ -53,6 +53,20 @@ export class AssignmentGroupService {
     info: GraphQLResolveInfo
   ) {
     return this.getProperty(loader, info, workoutId, "bodyParts");
+  }
+
+  saveHistory(workoutId: string, exercises: any[]) {
+    const assignmentHistoryRepository = getRepository(AssignmentHistory);
+
+    const exerciseEntities = exercises.map((exercise, index) =>
+      assignmentHistoryRepository.create({
+        executed: exercise.executed,
+        assignmentId: exercise.exerciseId,
+        order: index,
+        assignmentGroupId: workoutId
+      })
+    );
+    return assignmentHistoryRepository.save(exerciseEntities);
   }
 
   private async getProperty(

@@ -3,7 +3,7 @@ import { processUpload } from "./utils";
 import { getRepository, IsNull, In } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
 import { AssignmentHistory } from "./entities/assignment-history.entity";
-import { Measurement } from "entities/measurement.entity";
+import { Measurement } from "./entities/measurement.entity";
 
 export const typeDef = gql`
   extend type Query {
