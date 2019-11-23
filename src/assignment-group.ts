@@ -1,8 +1,6 @@
 import { gql } from "apollo-server";
-import { AssignmentHistory } from "./entities/assignment-history.entity";
 import { Workout } from "./entities/workout.entity";
 import { GraphQLResolveInfo } from "graphql";
-import { getRepository } from "typeorm";
 import { Context } from "./main";
 
 export const typeDef = gql`
@@ -71,62 +69,13 @@ export const resolvers = {
   Mutation: {
     createWorkout: async (
       _,
-      { name, startsAt, exercises, userId, state },
+      args,
       { user, assignmentGroupService }: Context
     ) => {
-      const workoutRepository = getRepository(Workout);
-
-      const newWorkout = await workoutRepository.save(
-        workoutRepository.create({
-          name,
-          state,
-          startsAt,
-          userId,
-          trainerId: user.trainerProfileId
-        })
-      );
-
-      const newExercises = await assignmentGroupService.saveHistory(
-        newWorkout.id,
-        exercises
-      );
-
-      return { ...newWorkout, exercises: newExercises };
+      return assignmentGroupService.saveWorkout(args, user);
     },
-    updateWorkout: async (
-      _,
-      { name, startsAt, exercises, workoutId, state },
-      { user }
-    ) => {
-      const assignmentHistoryRepository = getRepository(AssignmentHistory);
-      const workoutRepository = getRepository(Workout);
-      await assignmentHistoryRepository.delete({
-        assignmentGroupId: workoutId
-      });
-
-      const newWorkout = await workoutRepository.save(
-        workoutRepository.create({
-          id: workoutId,
-          state: state,
-          startsAt,
-          name,
-          trainerId: user.trainerProfileId
-        })
-      );
-
-      const exerciseEntities = exercises.map((exercise, index) =>
-        assignmentHistoryRepository.create({
-          executed: exercise.executed,
-          assignmentId: exercise.exerciseId,
-          order: index,
-          assignmentGroupId: newWorkout.id
-        })
-      );
-      const newExercises = await assignmentHistoryRepository.save(
-        exerciseEntities
-      );
-
-      return { ...newWorkout, exercises: newExercises };
+    updateWorkout: async (_, args, { user, assignmentGroupService }) => {
+      return assignmentGroupService.updateWorkout(args, user);
     }
   },
   AssignmentGroup: {

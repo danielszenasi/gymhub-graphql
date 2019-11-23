@@ -26,7 +26,7 @@ import {
 } from "./workout-plan";
 
 import { merge } from "lodash";
-import { AssignmentGroupService } from "services/assignment-group.service";
+import { AssignmentGroupService } from "./services/assignment-group.service";
 
 export interface Context {
   mailer: Email;

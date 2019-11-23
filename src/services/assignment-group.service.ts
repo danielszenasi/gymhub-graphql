@@ -1,9 +1,10 @@
 import { IsNull, Raw, In, getRepository } from "typeorm";
 import { isValid, format } from "date-fns";
-import { AssignmentHistory } from "entities/assignment-history.entity";
-import { Assignment } from "entities/assignment.entity";
+import { AssignmentHistory } from "../entities/assignment-history.entity";
+import { Assignment } from "../entities/assignment.entity";
 import { GraphQLDatabaseLoader } from "@mando75/typeorm-graphql-loader";
 import { GraphQLResolveInfo } from "graphql";
+import { Workout } from "../entities/workout.entity";
 
 export class AssignmentGroupService {
   getCriteria({ type, startsAt, userId }, { trainerProfileId }) {
@@ -53,6 +54,51 @@ export class AssignmentGroupService {
     info: GraphQLResolveInfo
   ) {
     return this.getProperty(loader, info, workoutId, "bodyParts");
+  }
+
+  async saveWorkout(
+    { name, startsAt, exercises, userId, state },
+    { trainerProfileId }
+  ) {
+    const workoutRepository = getRepository(Workout);
+
+    const newWorkout = await workoutRepository.save(
+      workoutRepository.create({
+        name,
+        state,
+        startsAt,
+        userId,
+        trainerId: trainerProfileId
+      })
+    );
+
+    const newExercises = await this.saveHistory(newWorkout.id, exercises);
+    return { ...newWorkout, exercises: newExercises };
+  }
+
+  async updateWorkout(
+    { workoutId, name, startsAt, exercises, state },
+    { trainerProfileId }
+  ) {
+    const assignmentHistoryRepository = getRepository(AssignmentHistory);
+    const workoutRepository = getRepository(Workout);
+    await assignmentHistoryRepository.delete({
+      assignmentGroupId: workoutId
+    });
+
+    const newWorkout = await workoutRepository.save(
+      workoutRepository.create({
+        id: workoutId,
+        state: state,
+        startsAt,
+        name,
+        trainerId: trainerProfileId
+      })
+    );
+
+    const newExercises = await this.saveHistory(newWorkout.id, exercises);
+
+    return { ...newWorkout, exercises: newExercises };
   }
 
   saveHistory(workoutId: string, exercises: any[]) {
