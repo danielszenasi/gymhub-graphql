@@ -2,7 +2,7 @@ import { gql } from "apollo-server";
 import { processUpload } from "./utils";
 import { getRepository, IsNull, In } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
-import { ExerciseHistory } from "./entities/exercise-history.entity";
+import { AssignmentHistory } from "./entities/assignment-history.entity";
 
 export const typeDef = gql`
   extend type Query {
@@ -12,22 +12,22 @@ export const typeDef = gql`
   extend type Mutation {
     createExercise(
       name: String!
-      instructions: String!
+      description: String!
       measures: [String]!
       categories: [String]!
       bodyParts: [String]!
-      file: Upload
+      file: Upload!
     ): Exercise
   }
   type Exercise {
     id: ID!
     name: String!
-    instructions: String!
+    description: String!
     url: String!
     measures: JSON!
     categories: JSON!
     bodyParts: JSON!
-    history(userId: ID): [ExerciseHistory]
+    history(userId: ID): [AssignmentHistory]
   }
 `;
 export const resolvers = {
@@ -49,14 +49,15 @@ export const resolvers = {
   Mutation: {
     createExercise: async (
       _,
-      { name, instructions, measures, categories, bodyParts, file },
+      { name, description, measures, categories, bodyParts, file },
       { user }
     ) => {
-      const url = await processUpload(file);
+      const url = file ? await processUpload(file) : null;
+
       const exerciseRepository = getRepository(Exercise);
       const newExercise = await exerciseRepository.save({
         name,
-        instructions,
+        description,
         measures: measures,
         categories: categories,
         bodyParts: bodyParts,
@@ -68,13 +69,13 @@ export const resolvers = {
   },
   Exercise: {
     history: (exercise: Exercise, { userId }) => {
-      return getRepository(ExerciseHistory)
-        .createQueryBuilder("exerciseHistory")
-        .innerJoinAndSelect("exerciseHistory.workout", "workout")
-        .where("exerciseHistory.exerciseId = :exerciseId", {
-          exerciseId: exercise.id
+      return getRepository(AssignmentHistory)
+        .createQueryBuilder("i")
+        .innerJoinAndSelect("i.assignmentGroup", "assignmentGroup")
+        .where("i.assignmentId = :assignmentId", {
+          assignmentId: exercise.id
         })
-        .andWhere("workout.userId = :userId", { userId })
+        .andWhere("assignmentGroup.userId = :userId", { userId })
         .getMany();
     }
   }
