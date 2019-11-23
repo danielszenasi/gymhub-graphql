@@ -67,7 +67,7 @@ export class AssignmentGroup {
 
   @OneToMany(
     _ => AssignmentGroupToWorkoutPlan,
-    assignmentGroupToWorkoutPlan => assignmentGroupToWorkoutPlan.workout
+    assignmentGroupToWorkoutPlan => assignmentGroupToWorkoutPlan.assignmentGroup
   )
   public assignmentGroupToWorkoutPlans!: AssignmentGroupToWorkoutPlan[];
 }

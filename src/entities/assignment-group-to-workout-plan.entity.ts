@@ -20,7 +20,7 @@ export class AssignmentGroupToWorkoutPlan {
     _ => AssignmentGroup,
     assignmentGroup => assignmentGroup.assignmentGroupToWorkoutPlans
   )
-  public workout!: AssignmentGroup;
+  public assignmentGroup!: AssignmentGroup;
 
   @ManyToOne(
     _ => WorkoutPlan,

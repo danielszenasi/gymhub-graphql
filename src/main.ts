@@ -11,14 +11,32 @@ import { typeDef as User, resolvers as userResolvers } from "./user";
 import {
   typeDef as Exercise,
   resolvers as exerciseResolvers
-} from "./exercise";
-import { typeDef as Workout, resolvers as workoutResolvers } from "./workout";
+} from "./assignment";
+import {
+  typeDef as AssignmentHistory,
+  resolvers as assignmentHistoryResolvers
+} from "./assignment-history";
+import {
+  typeDef as AssignmentGroup,
+  resolvers as assignmentGroupResolvers
+} from "./assignment-group";
 import {
   typeDef as WorkoutPlan,
   resolvers as workoutPlanResolvers
 } from "./workout-plan";
 
 import { merge } from "lodash";
+import { AssignmentGroupService } from "services/assignment-group.service";
+
+export interface Context {
+  mailer: Email;
+  user: {
+    id: string;
+    trainerProfileId: string;
+  };
+  loader: GraphQLDatabaseLoader;
+  assignmentGroupService: AssignmentGroupService;
+}
 
 export function getUser(request: any) {
   const authorization = request.get("authorization");
@@ -53,7 +71,7 @@ const Mutation = gql`
 `;
 
 createConnection().then(connection => {
-  const context = async ({ req }) => {
+  const context = async ({ req }): Promise<Context> => {
     const user = getUser(req);
 
     const transport = nodemailer.createTransport(
@@ -71,16 +89,31 @@ createConnection().then(connection => {
       transport
     });
 
-    return { mailer, user, loader: new GraphQLDatabaseLoader(connection) };
+    return {
+      mailer,
+      user,
+      loader: new GraphQLDatabaseLoader(connection),
+      assignmentGroupService: new AssignmentGroupService()
+    };
   };
 
   const server = new ApolloServer({
-    typeDefs: [Scalar, Query, Mutation, User, Exercise, Workout, WorkoutPlan],
+    typeDefs: [
+      Scalar,
+      Query,
+      Mutation,
+      User,
+      Exercise,
+      AssignmentGroup,
+      AssignmentHistory,
+      WorkoutPlan
+    ],
     resolvers: merge(
       resolvers,
       userResolvers,
       exerciseResolvers,
-      workoutResolvers,
+      assignmentGroupResolvers,
+      assignmentHistoryResolvers,
       workoutPlanResolvers
     ),
     context,
