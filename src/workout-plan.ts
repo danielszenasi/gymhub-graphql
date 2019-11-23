@@ -1,8 +1,8 @@
 import { GraphQLResolveInfo } from "graphql";
 import { gql } from "apollo-server";
-import { WorkoutPlan } from "entities/workout-plan.entity";
+import { WorkoutPlan } from "./entities/workout-plan.entity";
 import { getRepository } from "typeorm";
-import { AssignmentGroupToWorkoutPlan } from "entities/assignment-group-to-workout-plan.entity";
+import { AssignmentGroupToWorkoutPlan } from "./entities/assignment-group-to-workout-plan.entity";
 
 export const typeDef = gql`
   extend type Query {
