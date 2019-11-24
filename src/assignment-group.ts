@@ -28,6 +28,12 @@ export const typeDef = gql`
       state: WorkoutState
       exercises: [ExerciseHistoryInput!]!
     ): AssignmentGroup
+    createStatistics(
+      startsAt: Date!
+      userId: String
+      name: String!
+      measurements: [MeasurementHistoryInput!]!
+    ): AssignmentGroup
   }
   enum WorkoutType {
     COMMON
@@ -73,6 +79,13 @@ export const resolvers = {
       { user, assignmentGroupService }: Context
     ) => {
       return assignmentGroupService.saveWorkout(args, user);
+    },
+    createStatistics: async (
+      _,
+      args,
+      { user, assignmentGroupService }: Context
+    ) => {
+      return assignmentGroupService.saveStatistics(args, user);
     },
     updateWorkout: async (_, args, { user, assignmentGroupService }) => {
       return assignmentGroupService.updateWorkout(args, user);

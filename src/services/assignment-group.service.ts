@@ -5,6 +5,7 @@ import { Assignment } from "../entities/assignment.entity";
 import { GraphQLDatabaseLoader } from "@mando75/typeorm-graphql-loader";
 import { GraphQLResolveInfo } from "graphql";
 import { Workout } from "../entities/workout.entity";
+import { Statistics } from "entities/statistics.entity";
 
 export class AssignmentGroupService {
   getCriteria({ type, startsAt, userId }, { trainerProfileId }) {
@@ -54,6 +55,31 @@ export class AssignmentGroupService {
     info: GraphQLResolveInfo
   ) {
     return this.getProperty(loader, info, workoutId, "bodyParts");
+  }
+
+  async saveStatistics(
+    { name, startsAt, assignmentHistories, userId },
+    { trainerProfileId }
+  ) {
+    const statisticsRepository = getRepository(Statistics);
+
+    const newStatistics = await statisticsRepository.save(
+      statisticsRepository.create({
+        name,
+        startsAt,
+        userId,
+        trainerId: trainerProfileId
+      })
+    );
+
+    const newAssignmentHistories = await this.saveHistory(
+      newStatistics.id,
+      assignmentHistories
+    );
+    return {
+      ...newStatistics,
+      assignmentHistories: newAssignmentHistories
+    };
   }
 
   async saveWorkout(

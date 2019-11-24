@@ -5,6 +5,10 @@ export const typeDef = gql`
     exerciseId: ID!
     executed: JSON!
   }
+  input MeasurementHistoryInput {
+    measurementId: ID!
+    executed: JSON!
+  }
   type AssignmentHistory {
     id: ID!
     assignmentGroup: AssignmentGroup

@@ -42,6 +42,9 @@ function getTransformer(): ValueTransformer {
   return {
     // to db
     to(ams: string[]): any {
+      if (!ams) {
+        return ams;
+      }
       const amsCollected = ams.reduce((amsObj, a) => {
         amsObj[a] = true;
 
