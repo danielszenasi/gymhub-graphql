@@ -23,10 +23,10 @@ export const typeDef = gql`
     ): Assignment
     createMeasurement(
       name: String!
-      description: String!
+      description: String
       measures: [String]!
       categories: [String]!
-      bodyParts: [String]!
+      bodyParts: [String]
     ): Assignment
   }
   type Assignment {
@@ -114,6 +114,7 @@ export const resolvers = {
           assignmentId: id
         })
         .andWhere("assignmentGroup.userId = :userId", { userId })
+        .andWhere("assignmentGroup.state = :state", { state: "FINISHED" })
         .getMany();
     }
   }
