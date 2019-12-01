@@ -5,7 +5,7 @@ import { AssignmentGroup } from "./assignment-group.entity";
 @Entity()
 export class AssignmentGroupToWorkoutPlan {
   @PrimaryGeneratedColumn("uuid")
-  public id!: number;
+  public id!: string;
 
   @Column()
   public assignmentGroupId!: string;

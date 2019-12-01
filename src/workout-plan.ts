@@ -4,6 +4,9 @@ import { WorkoutPlan } from "./entities/workout-plan.entity";
 import { getRepository } from "typeorm";
 import { AssignmentGroupToWorkoutPlan } from "./entities/assignment-group-to-workout-plan.entity";
 import { Context } from "./main";
+import { AssignmentGroupState } from "./entities/assignment-group.entity";
+import { Workout } from "./entities/workout.entity";
+import { AssignmentHistory } from "./entities/assignment-history.entity";
 
 export const typeDef = gql`
   extend type Query {
@@ -15,6 +18,10 @@ export const typeDef = gql`
       numberOfWorkoutsPerWeek: Int
       workouts: [String!]!
     ): WorkoutPlan
+    attachWorkoutPlanToUser(
+      userId: String!
+      workoutPlanId: String!
+    ): [AssignmentGroup]
   }
   type WorkoutPlan {
     id: ID!
@@ -35,10 +42,7 @@ export const resolvers = {
       { loader }: Context,
       info: GraphQLResolveInfo
     ) => {
-      const i = await loader.loadMany(WorkoutPlan, null, info);
-      i.forEach((e: any) => console.log(e.assignmentGroupToWorkoutPlans));
-
-      return i;
+      return loader.loadMany(WorkoutPlan, null, info);
     }
   },
   Mutation: {
@@ -68,6 +72,66 @@ export const resolvers = {
 
       await assignmentGroupToWorkoutPlanRepository.save(workoutToWorkoutPlans);
       return workoutPlan;
+    },
+    attachWorkoutPlanToUser: async (_, { userId, workoutPlanId }, { user }) => {
+      const assignmentGroupToWorkoutPlanRepository = getRepository(
+        AssignmentGroupToWorkoutPlan
+      );
+
+      const workoutRepository = getRepository(Workout);
+      const assignmentHistoryRepository = getRepository(AssignmentHistory);
+      const assignmentGroupToWorkoutPlan = await assignmentGroupToWorkoutPlanRepository.find(
+        {
+          where: { workoutPlanId },
+          relations: ["assignmentGroup", "assignmentGroup.assignmentHistories"]
+        }
+      );
+
+      const { max } = await workoutRepository
+        .createQueryBuilder("workout")
+        .select("MAX(workout.order)", "max")
+        .where({ userId: user.id })
+        .getRawOne();
+
+      const workoutEntities = assignmentGroupToWorkoutPlan.map((item, index) =>
+        workoutRepository.create({
+          state: AssignmentGroupState.PLANNED,
+          userId,
+          trainerId: user.trainerProfileId,
+          parentId: item.assignmentGroupId,
+          order: max + index + 1,
+          name: item.assignmentGroup.name
+        })
+      );
+
+      const newWorkouts = await workoutRepository.save(workoutEntities);
+
+      const assignmentHistories = assignmentGroupToWorkoutPlan.reduce(
+        (acc, item) => {
+          return {
+            ...acc,
+            [item.assignmentGroupId]: item.assignmentGroup.assignmentHistories
+          };
+        },
+        {}
+      );
+
+      const entities = newWorkouts.reduce((acc, workout) => {
+        const newAssignmentHistories = assignmentHistories[
+          workout.parentId
+        ].map(assignmentHistory =>
+          assignmentHistoryRepository.create({
+            executed: assignmentHistory.executed,
+            order: assignmentHistory.order,
+            assignmentId: assignmentHistory.assignmentId,
+            assignmentGroupId: workout.id
+          })
+        );
+        return acc.concat(newAssignmentHistories);
+      }, []);
+
+      await assignmentHistoryRepository.save(entities);
+      return newWorkouts;
     }
   }
 };

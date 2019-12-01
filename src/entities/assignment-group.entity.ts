@@ -28,6 +28,9 @@ export class AssignmentGroup {
   })
   state!: AssignmentGroupState;
 
+  @Column({ nullable: true })
+  public order!: number;
+
   @Column({ nullable: true }) name?: string;
 
   @Column({ nullable: true }) note?: string;
@@ -58,6 +61,9 @@ export class AssignmentGroup {
     assignmentGroup => assignmentGroup.children
   )
   parent?: AssignmentGroup;
+
+  @Column({ nullable: true })
+  parentId!: string;
 
   @OneToMany(
     _ => AssignmentGroup,

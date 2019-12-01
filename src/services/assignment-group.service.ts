@@ -5,7 +5,7 @@ import { Assignment } from "../entities/assignment.entity";
 import { GraphQLDatabaseLoader } from "@mando75/typeorm-graphql-loader";
 import { GraphQLResolveInfo } from "graphql";
 import { Workout } from "../entities/workout.entity";
-import { Statistics } from "entities/statistics.entity";
+import { Statistics } from "../entities/statistics.entity";
 
 export class AssignmentGroupService {
   getCriteria({ type, startsAt, userId }, { trainerProfileId }) {
