@@ -58,7 +58,7 @@ export class AssignmentGroupService {
   }
 
   async saveStatistics(
-    { name, startsAt, assignmentHistories, userId },
+    { name, startsAt, measurements, userId },
     { trainerProfileId }
   ) {
     const statisticsRepository = getRepository(Statistics);
@@ -74,7 +74,7 @@ export class AssignmentGroupService {
 
     const newAssignmentHistories = await this.saveHistory(
       newStatistics.id,
-      assignmentHistories
+      measurements
     );
     return {
       ...newStatistics,
