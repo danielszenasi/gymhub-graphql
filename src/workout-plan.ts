@@ -18,10 +18,7 @@ export const typeDef = gql`
       numberOfWorkoutsPerWeek: Int
       workouts: [String!]!
     ): WorkoutPlan
-    attachWorkoutPlanToUser(
-      userId: String!
-      workoutPlanId: String!
-    ): [AssignmentGroup]
+    attachWorkoutPlanToUser(userId: ID!, workoutPlanId: ID!): [AssignmentGroup]
   }
   type WorkoutPlan {
     id: ID!

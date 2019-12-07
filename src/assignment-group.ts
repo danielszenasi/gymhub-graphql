@@ -19,21 +19,23 @@ export const typeDef = gql`
       userId: String
       name: String
       planWorkoutId: ID
-      exercises: [ExerciseHistoryInput!]!
+      exercises: [AssignmentHistoryInput!]!
     ): AssignmentGroup
     updateWorkout(
       workoutId: ID!
       startsAt: Date
       name: String
       state: WorkoutState
-      exercises: [ExerciseHistoryInput!]!
+      exercises: [AssignmentHistoryInput!]!
     ): AssignmentGroup
     createStatistics(
-      startsAt: Date!
+      startsAt: Date
       userId: String
-      name: String!
-      measurements: [MeasurementHistoryInput!]!
+      name: String
+      measurements: [AssignmentHistoryInput!]!
     ): AssignmentGroup
+    attachWorkoutToUser(userId: ID!, workoutId: ID!): [AssignmentGroup]
+    attachStatisticsToUser(userId: ID!, statisticsId: ID!): [AssignmentGroup]
   }
   enum WorkoutType {
     COMMON
@@ -89,6 +91,16 @@ export const resolvers = {
     },
     updateWorkout: async (_, args, { user, assignmentGroupService }) => {
       return assignmentGroupService.updateWorkout(args, user);
+    },
+    attachWorkoutToUser: async (_, args, { user, assignmentGroupService }) => {
+      return assignmentGroupService.attachWorkout(args, user);
+    },
+    attachStatisticsToUser: async (
+      _,
+      args,
+      { user, assignmentGroupService }
+    ) => {
+      return assignmentGroupService.attachStatistics(args, user);
     }
   },
   AssignmentGroup: {

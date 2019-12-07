@@ -1,12 +1,8 @@
 import { gql } from "apollo-server";
 
 export const typeDef = gql`
-  input ExerciseHistoryInput {
-    exerciseId: ID!
-    executed: JSON!
-  }
-  input MeasurementHistoryInput {
-    measurementId: ID!
+  input AssignmentHistoryInput {
+    id: ID!
     executed: JSON!
   }
   type AssignmentHistory {
