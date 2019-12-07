@@ -11,8 +11,8 @@ const resolvers = {
     parseValue(value) {
       return new Date(value); // value from the client
     },
-    serialize(value) {
-      return value; // value sent to the client
+    serialize(value: Date) {
+      return value.toISOString(); // value sent to the client
     },
     parseLiteral(ast) {
       if (ast.kind === Kind.INT) {

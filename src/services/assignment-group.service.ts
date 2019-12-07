@@ -1,12 +1,12 @@
 import { IsNull, Raw, In, getRepository } from "typeorm";
-import { isValid, format } from "date-fns";
+import { isValid, format, parseISO } from "date-fns";
 import { AssignmentHistory } from "../entities/assignment-history.entity";
 import { Assignment } from "../entities/assignment.entity";
 import { GraphQLDatabaseLoader } from "@mando75/typeorm-graphql-loader";
 import { GraphQLResolveInfo } from "graphql";
 import { Workout } from "../entities/workout.entity";
 import { Statistics } from "../entities/statistics.entity";
-import { AssignmentGroupState } from "entities/assignment-group.entity";
+import { AssignmentGroupState } from "../entities/assignment-group.entity";
 
 export class AssignmentGroupService {
   getCriteria({ type, startsAt, userId }, { trainerProfileId }) {
@@ -16,14 +16,14 @@ export class AssignmentGroupService {
         userId: IsNull()
       };
     }
-    if (startsAt && isValid(new Date(startsAt))) {
-      const startsAt = Raw(alias => {
+    if (startsAt && isValid(parseISO(startsAt))) {
+      const startsAtRaw = Raw(alias => {
         const aliasWithQuote = alias
           .split(".")
           .map(v => `"${v}"`)
           .join(".");
         return `${aliasWithQuote}::date = '${format(
-          new Date(startsAt),
+          parseISO(startsAt),
           "yyyy-MM-dd"
         )}'`;
       });
@@ -32,7 +32,7 @@ export class AssignmentGroupService {
         trainerId: trainerProfileId,
         ...(userId && { userId: userId }),
         ...(type && { state: type }),
-        startsAt
+        startsAt: startsAtRaw
       };
     }
 
