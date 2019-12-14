@@ -72,6 +72,9 @@ const Mutation = gql`
 
 createConnection().then(connection => {
   const context = async ({ req }): Promise<Context> => {
+    console.log("query", req.body.query);
+    console.log("variables", req.body.variables);
+
     const user = getUser(req);
 
     const transport = nodemailer.createTransport(
