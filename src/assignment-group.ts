@@ -2,6 +2,7 @@ import { gql } from "apollo-server";
 import { Workout } from "./entities/workout.entity";
 import { GraphQLResolveInfo } from "graphql";
 import { Context } from "./main";
+import { Statistics } from "./entities/statistics.entity";
 
 export const typeDef = gql`
   extend type Query {
@@ -11,6 +12,12 @@ export const typeDef = gql`
       startsAt: Date
     ): [AssignmentGroup]
     getWorkout(id: ID!): AssignmentGroup
+    getStatistics(
+      type: WorkoutType
+      userId: String
+      startsAt: Date
+    ): [AssignmentGroup]
+    getStatistic(id: ID!): AssignmentGroup
   }
   extend type Mutation {
     createWorkout(
@@ -67,13 +74,23 @@ export const resolvers = {
       { user, loader, assignmentGroupService },
       info: GraphQLResolveInfo
     ) => {
-      console.log("args", args);
-
       const criteria = assignmentGroupService.getCriteria(args, user);
       return loader.loadMany(Workout, criteria, info);
     },
     getWorkout: (_, { id }, { loader }, info: GraphQLResolveInfo) => {
       return loader.loadOne(Workout, { id }, info);
+    },
+    getStatistic: (_, { id }, { loader }, info: GraphQLResolveInfo) => {
+      return loader.loadOne(Statistics, { id }, info);
+    },
+    getStatistics: (
+      _,
+      args,
+      { user, loader, assignmentGroupService },
+      info: GraphQLResolveInfo
+    ) => {
+      const criteria = assignmentGroupService.getCriteria(args, user);
+      return loader.loadMany(Statistics, criteria, info);
     }
   },
   Mutation: {
