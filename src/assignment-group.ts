@@ -67,6 +67,8 @@ export const resolvers = {
       { user, loader, assignmentGroupService },
       info: GraphQLResolveInfo
     ) => {
+      console.log("args", args);
+
       const criteria = assignmentGroupService.getCriteria(args, user);
       return loader.loadMany(Workout, criteria, info);
     },

@@ -16,6 +16,10 @@ export class AssignmentGroupService {
         userId: IsNull()
       };
     }
+    console.log(startsAt);
+    console.log(parseISO(startsAt));
+    console.log(isValid(parseISO(startsAt)));
+
     if (startsAt && isValid(parseISO(startsAt))) {
       const startsAtRaw = Raw(alias => {
         const aliasWithQuote = alias
