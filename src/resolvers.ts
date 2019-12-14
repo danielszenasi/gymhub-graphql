@@ -9,12 +9,15 @@ const resolvers = {
     name: "Date",
     description: "Date custom scalar type",
     parseValue(value) {
-      return new Date(value); // value from the client
+      console.log("parseValue");
+
+      return value; // value from the client
     },
     serialize(value: Date) {
       return value.toISOString(); // value sent to the client
     },
     parseLiteral(ast) {
+      console.log("parseLiteral");
       if (ast.kind === Kind.INT) {
         return parseInt(ast.value, 10);
       }
