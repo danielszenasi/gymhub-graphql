@@ -43,12 +43,10 @@ export const typeDef = gql`
 export const resolvers = {
   Query: {
     getExercises: (_, { ids }, { user, loader }, info) => {
+      const userId = user ? user.id : IsNull();
       return loader.loadMany(
         Exercise,
-        [
-          { userId: user.id, ...(ids && { id: In(ids) }) },
-          { userId: IsNull(), ...(ids && { id: In(ids) }) }
-        ],
+        [{ userId, ...(ids && { id: In(ids) }) }],
         info
       );
     },
@@ -56,12 +54,10 @@ export const resolvers = {
       return loader.loadOne(Exercise, { id }, info);
     },
     getMeasurements: (_, { ids }, { user, loader }, info) => {
+      const userId = user ? user.id : IsNull();
       return loader.loadMany(
         Measurement,
-        [
-          { userId: user.id, ...(ids && { id: In(ids) }) },
-          { userId: IsNull(), ...(ids && { id: In(ids) }) }
-        ],
+        [{ userId, ...(ids && { id: In(ids) }) }],
         info
       );
     },
