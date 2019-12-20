@@ -42,10 +42,10 @@ export class AssignmentGroup {
   userId?: string;
 
   @ManyToOne(_ => Trainer)
-  trainer!: Trainer;
+  trainer?: Trainer;
 
-  @Column()
-  trainerId!: string;
+  @Column({ nullable: true })
+  trainerId?: string;
 
   @Column({ nullable: true })
   startsAt?: Date;
