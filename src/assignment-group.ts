@@ -45,6 +45,7 @@ export const typeDef = gql`
     attachStatisticsToUser(userId: ID!, statisticsId: ID!): [AssignmentGroup]
   }
   enum WorkoutType {
+    GLOBAL
     COMMON
     PLANNED
     FINISHED

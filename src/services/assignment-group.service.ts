@@ -9,16 +9,20 @@ import { Statistics } from "../entities/statistics.entity";
 import { AssignmentGroupState } from "../entities/assignment-group.entity";
 
 export class AssignmentGroupService {
-  getCriteria({ type, startsAt, userId }, { trainerProfileId }) {
+  getCriteria({ type, startsAt, userId }, user) {
+    if (type && type === "GLOBAL") {
+      return {
+        trainerId: IsNull(),
+        userId: IsNull()
+      };
+    }
+    const { trainerProfileId } = user;
     if (type && type === "COMMON") {
       return {
         trainerId: trainerProfileId,
         userId: IsNull()
       };
     }
-    console.log(startsAt);
-    console.log(parseISO(startsAt));
-    console.log(isValid(parseISO(startsAt)));
 
     if (startsAt && isValid(parseISO(startsAt))) {
       const startsAtRaw = Raw(alias => {
