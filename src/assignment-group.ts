@@ -24,14 +24,16 @@ export const typeDef = gql`
       startsAt: Date
       state: WorkoutState!
       userId: String
-      name: String
+      nameEn: String
+      nameHu: String
       planWorkoutId: ID
       exercises: [AssignmentHistoryInput!]!
     ): AssignmentGroup
     updateWorkout(
       workoutId: ID!
       startsAt: Date
-      name: String
+      nameEn: String
+      nameHu: String
       state: WorkoutState
       exercises: [AssignmentHistoryInput!]!
     ): AssignmentGroup
@@ -39,13 +41,15 @@ export const typeDef = gql`
       startsAt: Date
       state: WorkoutState!
       userId: String
-      name: String
+      nameEn: String
+      nameHu: String
       measurements: [AssignmentHistoryInput!]!
     ): AssignmentGroup
     updateStatistics(
       statisticsId: ID!
       startsAt: Date
-      name: String
+      nameEn: String
+      nameHu: String
       state: WorkoutState
       measurements: [AssignmentHistoryInput!]!
     ): AssignmentGroup
@@ -70,8 +74,8 @@ export const typeDef = gql`
     state: WorkoutState
     note: String
     user: User
-    categories: [String]
-    bodyParts: [String]
+    categories: [Category]
+    bodyParts: [BodyPart]
     assignmentHistories: [AssignmentHistory]
   }
 `;
@@ -138,18 +142,16 @@ export const resolvers = {
     categories: async (
       workout: Workout,
       _,
-      { assignmentGroupService, loader }: Context,
-      info: GraphQLResolveInfo
+      { assignmentGroupService }: Context
     ) => {
-      return assignmentGroupService.getCategories(loader, workout.id, info);
+      return assignmentGroupService.getCategories(workout.id);
     },
     bodyParts: async (
       workout: Workout,
       _,
-      { assignmentGroupService, loader }: Context,
-      info: GraphQLResolveInfo
+      { assignmentGroupService }: Context
     ) => {
-      return assignmentGroupService.getBodyParts(loader, workout.id, info);
+      return assignmentGroupService.getBodyParts(workout.id);
     }
   }
 };

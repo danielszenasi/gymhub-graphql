@@ -36,7 +36,8 @@ export class AssignmentHistory {
 
   @OneToMany(
     () => Execution,
-    execution => execution.assignmentHistory
+    execution => execution.assignmentHistory,
+    { cascade: true }
   )
   executions: Execution[];
 }

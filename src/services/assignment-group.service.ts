@@ -2,8 +2,7 @@ import { IsNull, Raw, In, getRepository } from "typeorm";
 import { isValid, format, parseISO } from "date-fns";
 import { AssignmentHistory } from "../entities/assignment-history.entity";
 import { Assignment } from "../entities/assignment.entity";
-import { GraphQLDatabaseLoader } from "@mando75/typeorm-graphql-loader";
-import { GraphQLResolveInfo } from "graphql";
+
 import { Workout } from "../entities/workout.entity";
 import { Statistics } from "../entities/statistics.entity";
 import { AssignmentGroupState } from "../entities/assignment-group.entity";
@@ -50,19 +49,11 @@ export class AssignmentGroupService {
     };
   }
 
-  async getCategories(
-    loader: GraphQLDatabaseLoader,
-    workoutId: string,
-    info: GraphQLResolveInfo
-  ) {
-    return this.getProperty(loader, info, workoutId, "categories");
+  async getCategories(workoutId: string) {
+    return this.getProperty(workoutId, "categories");
   }
-  async getBodyParts(
-    loader: GraphQLDatabaseLoader,
-    workoutId: string,
-    info: GraphQLResolveInfo
-  ) {
-    return this.getProperty(loader, info, workoutId, "bodyParts");
+  async getBodyParts(workoutId: string) {
+    return this.getProperty(workoutId, "bodyParts");
   }
 
   async saveStatistics(
@@ -106,6 +97,8 @@ export class AssignmentGroupService {
         trainerId: trainerProfileId
       })
     );
+
+    console.log(exercises);
 
     const newExercises = await this.saveHistory(newWorkout.id, exercises);
     return { ...newWorkout, exercises: newExercises };
@@ -166,7 +159,10 @@ export class AssignmentGroupService {
 
     const exerciseEntities = assignments.map((assignment, index) =>
       assignmentHistoryRepository.create({
-        // executed: assignment.executed,
+        executions: assignment.executed.map(exec => ({
+          measureId: exec.measureId,
+          value: exec.value
+        })),
         assignmentId: assignment.id,
         order: index,
         assignmentGroupId
@@ -176,39 +172,34 @@ export class AssignmentGroupService {
   }
 
   private async getProperty(
-    loader: GraphQLDatabaseLoader,
-    info: GraphQLResolveInfo,
     workoutId: string,
     field: "categories" | "bodyParts"
   ) {
-    const exerciseHistories = await loader.loadMany<AssignmentHistory>(
-      AssignmentHistory,
-      {
-        assignmentGroupId: workoutId
-      },
-      info,
-      { requiredSelectFields: ["assignmentId"] }
-    );
+    const assignmentRepository = getRepository(Assignment);
+    const assignmentHistoryRepository = getRepository(AssignmentHistory);
+    const exerciseHistories = await assignmentHistoryRepository.find({
+      where: { assignmentGroupId: workoutId },
+      select: ["assignmentId"]
+    });
+
     const ids = exerciseHistories.map(
       exerciseHistories => exerciseHistories.assignmentId
     );
     const uniqueIds = new Set(ids);
 
-    const exercises = await loader.loadMany(
-      Assignment,
-      {
-        id: In(Array.from(uniqueIds))
-      },
-      info,
-      { requiredSelectFields: ["id", "categories", "bodyParts"] }
-    );
+    const exercises = await assignmentRepository.find({
+      where: { id: In(Array.from(uniqueIds)) },
+      relations: ["categories", "bodyParts"]
+    });
 
-    return Array.from(
-      (exercises as any[]).reduce((set, exercise) => {
-        exercise[field].forEach(category => set.add(category));
-        return set;
-      }, new Set())
-    );
+    const result = exercises.reduce((set, exercise) => {
+      const items = exercise[field].reduce((acc, item) => {
+        return { ...acc, [item.id]: item };
+      }, {});
+      return { ...set, ...items };
+    }, {});
+
+    return Object.keys(result).map(key => result[key]);
   }
 
   private async attachAssignmentGroup(
