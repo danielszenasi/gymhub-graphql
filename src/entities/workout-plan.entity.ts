@@ -16,13 +16,13 @@ export class WorkoutPlan {
 
   @Column() numberOfWorkoutsPerWeek!: number;
 
-  @ManyToOne(_ => User)
+  @ManyToOne(() => User)
   user?: User;
 
   @Column({ nullable: true }) userId?: string;
 
   @OneToMany(
-    _ => AssignmentGroupToWorkoutPlan,
+    () => AssignmentGroupToWorkoutPlan,
     assignmentGroupToWorkoutPlan => assignmentGroupToWorkoutPlan.workoutPlan
   )
   public assignmentGroupToWorkoutPlans!: AssignmentGroupToWorkoutPlan[];

@@ -14,16 +14,20 @@ export const typeDef = gql`
   }
   extend type Mutation {
     createExercise(
-      name: String!
-      description: String!
+      nameEn: String
+      nameHu: String
+      descriptionEn: String
+      descriptionHu: String
       measures: [String]!
       categories: [String]!
       bodyParts: [String]!
-      file: Upload!
+      file: Upload
     ): Assignment
     createMeasurement(
-      name: String!
-      description: String
+      nameEn: String
+      nameHu: String
+      descriptionEn: String
+      descriptionHu: String
       measures: [String]!
       categories: [String]!
       bodyParts: [String]
@@ -31,24 +35,29 @@ export const typeDef = gql`
   }
   type Assignment {
     id: ID!
-    name: String!
-    description: String!
-    url: String!
-    measures: JSON!
-    categories: JSON!
-    bodyParts: JSON!
+    nameEn: String
+    nameHu: String
+    descriptionEn: String
+    descriptionHu: String
+    url: String
+    measures: [Measure]!
+    categories: [Category]!
+    bodyParts: [BodyPart]!
     history(userId: ID): [AssignmentHistory]
   }
 `;
 export const resolvers = {
   Query: {
-    getExercises: (_, { ids }, { user, loader }, info) => {
+    getExercises: async (_, { ids }, { user, loader }, info) => {
       const criteria = user ? { userId: user.id } : { isPublic: true };
-      return loader.loadMany(
+      const r = await loader.loadMany(
         Exercise,
         [{ ...criteria, ...(ids && { id: In(ids) }) }],
         info
       );
+      r.forEach(i => console.log(i.categories));
+
+      return r;
     },
     getExercise: (_, { id }, { loader }, info) => {
       return loader.loadOne(Exercise, { id }, info);
@@ -69,17 +78,34 @@ export const resolvers = {
   Mutation: {
     createExercise: async (
       _,
-      { name, description, measures, categories, bodyParts, file },
+      {
+        nameEn,
+        nameHu,
+        descriptionEn,
+        descriptionHu,
+        measures,
+        categories,
+        bodyParts,
+        file
+      },
       { user }
     ) => {
       const exerciseRepository = getRepository(Exercise);
-      const url = await processUpload(file);
+      const url = file ? await processUpload(file) : null;
       const newExercise = await exerciseRepository.save({
-        name,
-        description,
-        measures: measures,
-        categories: categories,
-        bodyParts: bodyParts,
+        nameEn,
+        descriptionEn,
+        nameHu,
+        descriptionHu,
+        measures: measures.map(measure => ({
+          id: measure
+        })),
+        categories: categories.map(category => ({
+          id: category
+        })),
+        bodyParts: bodyParts.map(bodyPart => ({
+          id: bodyPart
+        })),
         url,
         userId: user.id
       });
@@ -111,7 +137,9 @@ export const resolvers = {
           assignmentId: id
         })
         .andWhere("assignmentGroup.userId = :userId", { userId })
-        .andWhere("assignmentGroup.state = :state", { state: "FINISHED" })
+        .andWhere("assignmentGroup.state = :state", {
+          state: "FINISHED"
+        })
         .getMany();
     }
   }

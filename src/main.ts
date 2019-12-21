@@ -24,6 +24,15 @@ import {
   typeDef as WorkoutPlan,
   resolvers as workoutPlanResolvers
 } from "./workout-plan";
+import {
+  typeDef as BodyPart,
+  resolvers as bodyPartResolvers
+} from "./body-part";
+import {
+  typeDef as Category,
+  resolvers as categoryResolvers
+} from "./category";
+import { typeDef as Measure, resolvers as measureResolvers } from "./measure";
 
 import { merge } from "lodash";
 import { AssignmentGroupService } from "./services/assignment-group.service";
@@ -106,7 +115,10 @@ createConnection().then(connection => {
       Exercise,
       AssignmentGroup,
       AssignmentHistory,
-      WorkoutPlan
+      WorkoutPlan,
+      BodyPart,
+      Category,
+      Measure
     ],
     resolvers: merge(
       resolvers,
@@ -114,7 +126,10 @@ createConnection().then(connection => {
       exerciseResolvers,
       assignmentGroupResolvers,
       assignmentHistoryResolvers,
-      workoutPlanResolvers
+      workoutPlanResolvers,
+      bodyPartResolvers,
+      categoryResolvers,
+      measureResolvers
     ),
     context,
     introspection: true,

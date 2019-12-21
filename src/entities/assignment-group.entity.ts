@@ -31,20 +31,24 @@ export class AssignmentGroup {
   @Column({ nullable: true })
   public order!: number;
 
-  @Column({ nullable: true }) name?: string;
+  @Column({ nullable: true }) nameEn?: string;
 
-  @Column({ nullable: true }) note?: string;
+  @Column({ nullable: true }) nameHu?: string;
+
+  @Column({ nullable: true }) noteEn?: string;
+
+  @Column({ nullable: true }) noteHu?: string;
 
   @Column({ default: false })
   isPublic!: boolean;
 
-  @ManyToOne(_ => User)
+  @ManyToOne(() => User)
   user?: User;
 
   @Column({ nullable: true })
   userId?: string;
 
-  @ManyToOne(_ => Trainer)
+  @ManyToOne(() => Trainer)
   trainer!: Trainer;
 
   @Column()
@@ -54,13 +58,13 @@ export class AssignmentGroup {
   startsAt?: Date;
 
   @OneToMany(
-    _ => AssignmentHistory,
+    () => AssignmentHistory,
     AssignmentHistory => AssignmentHistory.assignmentGroup
   )
   assignmentHistories?: AssignmentHistory[];
 
   @ManyToOne(
-    _ => AssignmentGroup,
+    () => AssignmentGroup,
     assignmentGroup => assignmentGroup.children
   )
   parent?: AssignmentGroup;
@@ -69,13 +73,13 @@ export class AssignmentGroup {
   parentId!: string;
 
   @OneToMany(
-    _ => AssignmentGroup,
+    () => AssignmentGroup,
     assignmentGroup => assignmentGroup.parent
   )
   children?: AssignmentGroup[];
 
   @OneToMany(
-    _ => AssignmentGroupToWorkoutPlan,
+    () => AssignmentGroupToWorkoutPlan,
     assignmentGroupToWorkoutPlan => assignmentGroupToWorkoutPlan.assignmentGroup
   )
   public assignmentGroupToWorkoutPlans!: AssignmentGroupToWorkoutPlan[];

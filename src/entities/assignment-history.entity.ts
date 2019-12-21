@@ -1,6 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  Column,
+  OneToMany
+} from "typeorm";
 import { Assignment } from "./assignment.entity";
 import { AssignmentGroup } from "./assignment-group.entity";
+import { Execution } from "./execution.entity";
 
 @Entity()
 export class AssignmentHistory {
@@ -12,21 +19,24 @@ export class AssignmentHistory {
   startsAt?: Date;
 
   @ManyToOne(
-    _ => Assignment,
-    Assignment => Assignment.assignmentHistory
+    () => Assignment,
+    assignment => assignment.assignmentHistories
   )
   assignment!: Assignment;
 
   @Column() assignmentId!: string;
 
   @ManyToOne(
-    _ => AssignmentGroup,
+    () => AssignmentGroup,
     AssignmentGroup => AssignmentGroup.assignmentHistories
   )
   assignmentGroup!: AssignmentGroup;
 
   @Column() assignmentGroupId!: string;
 
-  @Column({ type: "jsonb" })
-  executed!: any;
+  @OneToMany(
+    () => Execution,
+    execution => execution.assignmentHistory
+  )
+  executions: Execution[];
 }

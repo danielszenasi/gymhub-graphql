@@ -66,14 +66,14 @@ export class AssignmentGroupService {
   }
 
   async saveStatistics(
-    { name, startsAt, measurements, userId, state },
+    { nameEn, startsAt, measurements, userId, state },
     { trainerProfileId }
   ) {
     const statisticsRepository = getRepository(Statistics);
 
     const newStatistics = await statisticsRepository.save(
       statisticsRepository.create({
-        name,
+        nameEn,
         startsAt,
         userId,
         state,
@@ -92,14 +92,14 @@ export class AssignmentGroupService {
   }
 
   async saveWorkout(
-    { name, startsAt, exercises, userId, state },
+    { nameEn, startsAt, exercises, userId, state },
     { trainerProfileId }
   ) {
     const workoutRepository = getRepository(Workout);
 
     const newWorkout = await workoutRepository.save(
       workoutRepository.create({
-        name,
+        nameEn,
         state,
         startsAt,
         userId,
@@ -112,7 +112,7 @@ export class AssignmentGroupService {
   }
 
   async updateWorkout(
-    { workoutId, name, startsAt, exercises, state },
+    { workoutId, nameEn, startsAt, exercises, state },
     { trainerProfileId }
   ) {
     const assignmentHistoryRepository = getRepository(AssignmentHistory);
@@ -126,7 +126,7 @@ export class AssignmentGroupService {
         id: workoutId,
         state: state,
         startsAt,
-        name,
+        nameEn,
         trainerId: trainerProfileId
       })
     );
@@ -137,7 +137,7 @@ export class AssignmentGroupService {
   }
 
   async updateStatistics(
-    { statisticsId, name, startsAt, measurements, state },
+    { statisticsId, nameEn, startsAt, measurements, state },
     { trainerProfileId }
   ) {
     const assignmentHistoryRepository = getRepository(AssignmentHistory);
@@ -151,7 +151,7 @@ export class AssignmentGroupService {
         id: statisticsId,
         state: state,
         startsAt,
-        name,
+        nameEn,
         trainerId: trainerProfileId
       })
     );
@@ -166,7 +166,7 @@ export class AssignmentGroupService {
 
     const exerciseEntities = assignments.map((assignment, index) =>
       assignmentHistoryRepository.create({
-        executed: assignment.executed,
+        // executed: assignment.executed,
         assignmentId: assignment.id,
         order: index,
         assignmentGroupId
@@ -241,7 +241,7 @@ export class AssignmentGroupService {
     const assignmentHistoryEntities = workout.assignmentHistories!.map(
       assignmentHistory =>
         assignmentHistoryRepository.create({
-          executed: assignmentHistory.executed,
+          // executed: assignmentHistory.executed,
           order: assignmentHistory.order,
           assignmentId: assignmentHistory.assignmentId,
           assignmentGroupId: newWorkout.id

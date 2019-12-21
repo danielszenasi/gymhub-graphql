@@ -14,7 +14,8 @@ export const typeDef = gql`
   }
   extend type Mutation {
     createWorkoutPlan(
-      name: String
+      nameEn: String
+      nameHu: String
       numberOfWorkoutsPerWeek: Int
       workouts: [String!]!
     ): WorkoutPlan
@@ -97,7 +98,7 @@ export const resolvers = {
           trainerId: user.trainerProfileId,
           parentId: item.assignmentGroupId,
           order: max + index + 1,
-          name: item.assignmentGroup.name
+          nameEn: item.assignmentGroup.nameEn
         })
       );
 
@@ -118,7 +119,7 @@ export const resolvers = {
           workout.parentId
         ].map(assignmentHistory =>
           assignmentHistoryRepository.create({
-            executed: assignmentHistory.executed,
+            // executed: assignmentHistory.executed,
             order: assignmentHistory.order,
             assignmentId: assignmentHistory.assignmentId,
             assignmentGroupId: workout.id

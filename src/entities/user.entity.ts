@@ -11,6 +11,11 @@ import {
 import { Trainer } from "./trainer.entity";
 import { WorkoutPlan } from "./workout-plan.entity";
 
+export enum System {
+  METRIC = "metric",
+  IMPERIAL = "imperial"
+}
+
 @Entity()
 export class User {
   @PrimaryGeneratedColumn("uuid") id!: string;
@@ -22,6 +27,8 @@ export class User {
   @Column({ nullable: true }) firstName!: string;
 
   @Column({ nullable: true }) lastName!: string;
+
+  @Column({ nullable: true }) profileImageUrl?: string;
 
   @Column({ nullable: true })
   inviteToken!: string;
@@ -47,14 +54,14 @@ export class User {
   @Column({ nullable: true })
   lastLogin!: Date;
 
-  @OneToOne(_ => Trainer)
+  @OneToOne(() => Trainer)
   @JoinColumn()
   trainerProfile?: Trainer;
 
   @Column({ nullable: true })
   public trainerProfileId?: string;
 
-  @ManyToOne(_ => Trainer)
+  @ManyToOne(() => Trainer)
   trainer!: Trainer;
 
   @Column({ nullable: true })
@@ -66,10 +73,14 @@ export class User {
   @Column({ default: false })
   isSuper!: boolean;
 
-  @Column({ type: "jsonb", default: { mass: "kg", length: "m" } })
-  units!: any;
+  @Column({
+    type: "enum",
+    enum: System,
+    default: System.IMPERIAL
+  })
+  measureSystem: System;
 
-  @ManyToOne(_ => WorkoutPlan)
+  @ManyToOne(() => WorkoutPlan)
   workoutPlan!: WorkoutPlan;
 
   @Column({ nullable: true })

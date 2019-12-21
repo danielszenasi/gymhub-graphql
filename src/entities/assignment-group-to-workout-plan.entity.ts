@@ -17,13 +17,13 @@ export class AssignmentGroupToWorkoutPlan {
   public order!: number;
 
   @ManyToOne(
-    _ => AssignmentGroup,
+    () => AssignmentGroup,
     assignmentGroup => assignmentGroup.assignmentGroupToWorkoutPlans
   )
   public assignmentGroup!: AssignmentGroup;
 
   @ManyToOne(
-    _ => WorkoutPlan,
+    () => WorkoutPlan,
     workoutPlan => workoutPlan.assignmentGroupToWorkoutPlans
   )
   public workoutPlan!: WorkoutPlan;

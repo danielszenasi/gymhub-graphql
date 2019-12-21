@@ -3,95 +3,54 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  ValueTransformer,
   OneToMany,
-  TableInheritance
+  TableInheritance,
+  ManyToMany,
+  JoinTable
 } from "typeorm";
 import { User } from "./user.entity";
 import { AssignmentHistory } from "./assignment-history.entity";
+import { Category } from "./category.entity";
+import { BodyPart } from "./body-part.entity";
+import { Measure } from "./measure.entity";
 
-export type Measure =
-  | "mass"
-  | "length"
-  | "area"
-  | "volume"
-  | "volume flow rate"
-  | "temperature"
-  | "time"
-  | "frequency"
-  | "speed"
-  | "pace"
-  | "pressure"
-  | "digital"
-  | "illuminance"
-  | "parts-per"
-  | "voltage"
-  | "current"
-  | "power"
-  | "apparent power"
-  | "reactive power"
-  | "energy"
-  | "reactive energy"
-  | "angle"
-  | "reps";
-
-type Category = "barbell" | "dumbbell" | "machine" | "weighted bodyweight";
-type BodyPart = "arms" | "back" | "legs";
-
-function getTransformer(): ValueTransformer {
-  return {
-    // to db
-    to(ams: string[]): any {
-      if (!ams) {
-        return ams;
-      }
-      const amsCollected = ams.reduce((amsObj, a) => {
-        amsObj[a] = true;
-
-        return amsObj;
-      }, {});
-
-      return amsCollected;
-    },
-    // from db
-    from(amsCollected: object): string[] {
-      return Object.keys(amsCollected);
-    }
-  };
-}
 @Entity()
 @TableInheritance({ column: { type: "varchar", name: "type" } })
 export class Assignment {
   @PrimaryGeneratedColumn("uuid") id!: string;
 
-  @Column() name!: string;
+  @Column({ nullable: true }) nameEn!: string;
 
-  @Column({ nullable: true }) description?: string;
+  @Column({ nullable: true }) nameHu!: string;
+
+  @Column({ nullable: true }) descriptionEn?: string;
+
+  @Column({ nullable: true }) descriptionHu?: string;
 
   @Column({ nullable: true }) url?: string;
 
-  @Column({
-    type: "jsonb",
-    default: "{}",
-    transformer: getTransformer()
-  })
-  measures!: Measure[];
+  @ManyToMany(
+    () => Measure,
+    measure => measure.assignments
+  )
+  @JoinTable()
+  measures: Measure[];
 
-  @Column({
-    type: "jsonb",
-    default: "{}",
-    transformer: getTransformer()
-  })
-  categories!: Category[];
+  @ManyToMany(
+    () => Category,
+    category => category.assignments
+  )
+  @JoinTable()
+  categories: Category[];
 
-  @Column({
-    type: "jsonb",
-    default: "{}",
-    transformer: getTransformer()
-  })
-  bodyParts!: BodyPart[];
+  @ManyToMany(
+    () => BodyPart,
+    bodyPart => bodyPart.assignments
+  )
+  @JoinTable()
+  bodyParts: BodyPart[];
 
-  @ManyToOne(_ => User)
+  @ManyToOne(() => User)
   user!: User;
 
   @Column() userId!: string;
@@ -100,8 +59,8 @@ export class Assignment {
   isPublic!: boolean;
 
   @OneToMany(
-    _ => AssignmentHistory,
+    () => AssignmentHistory,
     AssignmentHistory => AssignmentHistory.assignment
   )
-  assignmentHistory!: AssignmentHistory[];
+  assignmentHistories!: AssignmentHistory[];
 }
