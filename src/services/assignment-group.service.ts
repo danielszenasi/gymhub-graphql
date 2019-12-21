@@ -67,7 +67,7 @@ export class AssignmentGroupService {
   }
 
   async saveStatistics(
-    { name, startsAt, measurements, userId },
+    { name, startsAt, measurements, userId, state },
     { trainerProfileId }
   ) {
     const statisticsRepository = getRepository(Statistics);
@@ -77,6 +77,7 @@ export class AssignmentGroupService {
         name,
         startsAt,
         userId,
+        state,
         trainerId: trainerProfileId
       })
     );
@@ -133,7 +134,32 @@ export class AssignmentGroupService {
 
     const newExercises = await this.saveHistory(newWorkout.id, exercises);
 
-    return { ...newWorkout, exercises: newExercises };
+    return { ...newWorkout, assignmentHistories: newExercises };
+  }
+
+  async updateStatistics(
+    { statisticsId, name, startsAt, measurements, state },
+    { trainerProfileId }
+  ) {
+    const assignmentHistoryRepository = getRepository(AssignmentHistory);
+    const statisticsRepository = getRepository(Statistics);
+    await assignmentHistoryRepository.delete({
+      assignmentGroupId: statisticsId
+    });
+
+    const newWorkout = await statisticsRepository.save(
+      statisticsRepository.create({
+        id: statisticsId,
+        state: state,
+        startsAt,
+        name,
+        trainerId: trainerProfileId
+      })
+    );
+
+    const newMeasurements = await this.saveHistory(newWorkout.id, measurements);
+
+    return { ...newWorkout, assignmentHistories: newMeasurements };
   }
 
   saveHistory(assignmentGroupId: string, assignments: any[]) {

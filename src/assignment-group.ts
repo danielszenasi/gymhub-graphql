@@ -37,8 +37,16 @@ export const typeDef = gql`
     ): AssignmentGroup
     createStatistics(
       startsAt: Date
+      state: WorkoutState!
       userId: String
       name: String
+      measurements: [AssignmentHistoryInput!]!
+    ): AssignmentGroup
+    updateStatistics(
+      statisticsId: ID!
+      startsAt: Date
+      name: String
+      state: WorkoutState
       measurements: [AssignmentHistoryInput!]!
     ): AssignmentGroup
     attachWorkoutToUser(userId: ID!, workoutId: ID!): [AssignmentGroup]
@@ -111,6 +119,9 @@ export const resolvers = {
     },
     updateWorkout: async (_, args, { user, assignmentGroupService }) => {
       return assignmentGroupService.updateWorkout(args, user);
+    },
+    updateStatistics: async (_, args, { user, assignmentGroupService }) => {
+      return assignmentGroupService.updateStatistics(args, user);
     },
     attachWorkoutToUser: async (_, args, { user, assignmentGroupService }) => {
       return assignmentGroupService.attachWorkout(args, user);
