@@ -35,6 +35,9 @@ export class AssignmentGroup {
 
   @Column({ nullable: true }) note?: string;
 
+  @Column({ default: false })
+  isPublic!: boolean;
+
   @ManyToOne(_ => User)
   user?: User;
 
@@ -42,10 +45,10 @@ export class AssignmentGroup {
   userId?: string;
 
   @ManyToOne(_ => Trainer)
-  trainer?: Trainer;
+  trainer!: Trainer;
 
-  @Column({ nullable: true })
-  trainerId?: string;
+  @Column()
+  trainerId!: string;
 
   @Column({ nullable: true })
   startsAt?: Date;

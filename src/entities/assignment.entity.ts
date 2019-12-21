@@ -92,9 +92,12 @@ export class Assignment {
   bodyParts!: BodyPart[];
 
   @ManyToOne(_ => User)
-  user?: User;
+  user!: User;
 
-  @Column({ nullable: true }) userId?: string;
+  @Column() userId!: string;
+
+  @Column({ default: false })
+  isPublic!: boolean;
 
   @OneToMany(
     _ => AssignmentHistory,

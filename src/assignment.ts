@@ -1,6 +1,6 @@
 import { gql } from "apollo-server";
 import { processUpload } from "./utils";
-import { getRepository, IsNull, In } from "typeorm";
+import { getRepository, In } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
 import { AssignmentHistory } from "./entities/assignment-history.entity";
 import { Measurement } from "./entities/measurement.entity";
@@ -43,10 +43,10 @@ export const typeDef = gql`
 export const resolvers = {
   Query: {
     getExercises: (_, { ids }, { user, loader }, info) => {
-      const userId = user ? user.id : IsNull();
+      const criteria = user ? { userId: user.id } : { isPublic: true };
       return loader.loadMany(
         Exercise,
-        [{ userId, ...(ids && { id: In(ids) }) }],
+        [{ ...criteria, ...(ids && { id: In(ids) }) }],
         info
       );
     },
@@ -54,10 +54,11 @@ export const resolvers = {
       return loader.loadOne(Exercise, { id }, info);
     },
     getMeasurements: (_, { ids }, { user, loader }, info) => {
-      const userId = user ? user.id : IsNull();
+      const criteria = user ? { userId: user.id } : { isPublic: true };
+
       return loader.loadMany(
         Measurement,
-        [{ userId, ...(ids && { id: In(ids) }) }],
+        [{ ...criteria, ...(ids && { id: In(ids) }) }],
         info
       );
     },
@@ -80,7 +81,7 @@ export const resolvers = {
         categories: categories,
         bodyParts: bodyParts,
         url,
-        userId: user ? user.id : null
+        userId: user.id
       });
       return newExercise;
     },
@@ -90,15 +91,15 @@ export const resolvers = {
       { user }
     ) => {
       const measurementRepository = getRepository(Measurement);
-      const newExercise = await measurementRepository.save({
+      const newMeasurement = await measurementRepository.save({
         name,
         description,
         measures: measures,
         categories: categories,
         bodyParts: bodyParts,
-        userId: user ? user.id : null
+        userId: user.id
       });
-      return newExercise;
+      return newMeasurement;
     }
   },
   Assignment: {

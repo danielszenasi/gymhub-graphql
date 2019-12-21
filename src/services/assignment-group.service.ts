@@ -12,8 +12,7 @@ export class AssignmentGroupService {
   getCriteria({ type, startsAt, userId }, user) {
     if (type && type === "GLOBAL") {
       return {
-        trainerId: IsNull(),
-        userId: IsNull()
+        isPublic: true
       };
     }
     const { trainerProfileId } = user;
