@@ -217,7 +217,7 @@ export class AssignmentGroupService {
       .getRawOne();
 
     const workout = await repository.findOneOrFail(assignmentGroupId, {
-      relations: ["assignmentHistories"]
+      relations: ["assignmentHistories", "assignmentHistories.executions"]
     });
 
     const newWorkout = await repository.save({
@@ -232,7 +232,10 @@ export class AssignmentGroupService {
     const assignmentHistoryEntities = workout.assignmentHistories!.map(
       assignmentHistory =>
         assignmentHistoryRepository.create({
-          // executed: assignmentHistory.executed,
+          executions: assignmentHistory.executed.map(exec => ({
+            measureId: exec.measureId,
+            value: exec.value
+          })),
           order: assignmentHistory.order,
           assignmentId: assignmentHistory.assignmentId,
           assignmentGroupId: newWorkout.id

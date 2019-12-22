@@ -113,16 +113,34 @@ export const resolvers = {
     },
     createMeasurement: async (
       _,
-      { name, description, measures, categories, bodyParts },
+      {
+        nameEn,
+        descriptionEn,
+        nameHu,
+        descriptionHu,
+        measures,
+        categories,
+        bodyParts
+      },
       { user }
     ) => {
       const measurementRepository = getRepository(Measurement);
       const newMeasurement = await measurementRepository.save({
-        name,
-        description,
-        measures: measures,
-        categories: categories,
-        bodyParts: bodyParts,
+        nameEn,
+        descriptionEn,
+        nameHu,
+        descriptionHu,
+        measures: measures.map(measure => ({
+          id: measure
+        })),
+        categories: categories.map(category => ({
+          id: category
+        })),
+        bodyParts: bodyParts
+          ? bodyParts.map(bodyPart => ({
+              id: bodyPart
+            }))
+          : null,
         userId: user.id
       });
       return newMeasurement;

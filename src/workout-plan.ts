@@ -81,7 +81,11 @@ export const resolvers = {
       const assignmentGroupToWorkoutPlan = await assignmentGroupToWorkoutPlanRepository.find(
         {
           where: { workoutPlanId },
-          relations: ["assignmentGroup", "assignmentGroup.assignmentHistories"]
+          relations: [
+            "assignmentGroup",
+            "assignmentGroup.assignmentHistories",
+            "assignmentGroup.assignmentHistories.executions"
+          ]
         }
       );
 
@@ -119,7 +123,10 @@ export const resolvers = {
           workout.parentId
         ].map(assignmentHistory =>
           assignmentHistoryRepository.create({
-            // executed: assignmentHistory.executed,
+            executions: assignmentHistory.executed.map(exec => ({
+              measureId: exec.measureId,
+              value: exec.value
+            })),
             order: assignmentHistory.order,
             assignmentId: assignmentHistory.assignmentId,
             assignmentGroupId: workout.id

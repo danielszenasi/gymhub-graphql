@@ -15,7 +15,8 @@ export class Execution {
 
   @ManyToOne(
     () => AssignmentHistory,
-    assignmentHistory => assignmentHistory.executions
+    assignmentHistory => assignmentHistory.executions,
+    { onDelete: "CASCADE" }
   )
   assignmentHistory!: AssignmentHistory;
 
