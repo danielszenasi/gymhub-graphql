@@ -69,10 +69,12 @@ export const typeDef = gql`
 
   type AssignmentGroup {
     id: ID!
-    name: String
+    nameEn: String
+    nameHu: String
     startsAt: Date
     state: WorkoutState
-    note: String
+    noteEn: String
+    noteHu: String
     user: User
     categories: [Category]
     bodyParts: [BodyPart]
