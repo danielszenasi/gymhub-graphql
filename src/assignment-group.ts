@@ -3,6 +3,7 @@ import { Workout } from "./entities/workout.entity";
 import { GraphQLResolveInfo } from "graphql";
 import { Context } from "./main";
 import { Statistics } from "./entities/statistics.entity";
+import { getRepository } from "typeorm";
 
 export const typeDef = gql`
   extend type Query {
@@ -92,8 +93,19 @@ export const resolvers = {
       const criteria = assignmentGroupService.getCriteria(args, user);
       return loader.loadMany(Workout, criteria, info);
     },
-    getWorkout: (_, { id }, { loader }, info: GraphQLResolveInfo) => {
-      return loader.loadOne(Workout, { id }, info);
+    getWorkout: (_, { id }) => {
+      const repository = getRepository(Workout);
+      return repository
+        .createQueryBuilder("workout")
+        .leftJoinAndSelect("workout.assignmentHistories", "assignmentHistories")
+        .leftJoinAndSelect("assignmentHistories.assignment", "assignment")
+        .leftJoinAndSelect("assignment.categories", "categories")
+        .leftJoinAndSelect("assignment.bodyParts", "bodyParts")
+        .leftJoinAndSelect("assignment.measures", "measures")
+        .leftJoinAndSelect("assignmentHistories.executions", "executions")
+        .leftJoinAndSelect("executions.measure", "measure")
+        .where({ id })
+        .getOne();
     },
     getStatistic: (_, { id }, { loader }, info: GraphQLResolveInfo) => {
       return loader.loadOne(Statistics, { id }, info);
