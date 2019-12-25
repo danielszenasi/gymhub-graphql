@@ -98,8 +98,6 @@ export class AssignmentGroupService {
       })
     );
 
-    console.log(exercises);
-
     const newExercises = await this.saveHistory(newWorkout.id, exercises);
     return { ...newWorkout, exercises: newExercises };
   }
@@ -218,6 +216,8 @@ export class AssignmentGroupService {
       relations: ["assignmentHistories", "assignmentHistories.executions"]
     });
 
+    console.log(workout);
+
     const newWorkout = await repository.save({
       state: AssignmentGroupState.PLANNED,
       userId,
@@ -225,7 +225,7 @@ export class AssignmentGroupService {
       parentId: assignmentGroupId,
       order: max + 1,
       name: workout.name,
-      assignmentHistories: workout.assignmentHistories!.map(
+      assignmentHistories: workout.assignmentHistories.map(
         assignmentHistory => ({
           executions: assignmentHistory.executed.map(exec => ({
             measureId: exec.measureId,
