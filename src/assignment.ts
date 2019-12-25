@@ -151,6 +151,8 @@ export const resolvers = {
       return getRepository(AssignmentHistory)
         .createQueryBuilder("i")
         .innerJoinAndSelect("i.assignmentGroup", "assignmentGroup")
+        .innerJoinAndSelect("i.executions", "executions")
+        .innerJoinAndSelect("executions.measure", "measure")
         .where("i.assignmentId = :assignmentId", {
           assignmentId: id
         })
