@@ -5,7 +5,10 @@ import { Assignment } from "../entities/assignment.entity";
 
 import { Workout } from "../entities/workout.entity";
 import { Statistics } from "../entities/statistics.entity";
-import { AssignmentGroupState } from "../entities/assignment-group.entity";
+import {
+  AssignmentGroupState,
+  AssignmentGroup
+} from "../entities/assignment-group.entity";
 
 export class AssignmentGroupService {
   getCriteria({ type, startsAt, userId }, user) {
@@ -200,29 +203,28 @@ export class AssignmentGroupService {
     return Object.keys(result).map(key => result[key]);
   }
 
-  private async attachAssignmentGroup(
-    userId,
-    assignmentGroupId,
-    user,
-    repository
-  ) {
+  private async attachAssignmentGroup(userId, assignmentGroupId, user, type) {
+    const repository = getRepository(AssignmentGroup);
+
     const { max } = await repository
       .createQueryBuilder("assignmentGroup")
       .select("MAX(assignmentGroup.order)", "max")
-      .where({ userId: user.id })
+      .where({ userId: user.id, type })
       .getRawOne();
 
     const workout = await repository.findOneOrFail(assignmentGroupId, {
       relations: ["assignmentHistories", "assignmentHistories.executions"]
     });
 
-    const newWorkout = await repository.save({
+    await repository.save({
       state: AssignmentGroupState.PLANNED,
       userId,
       trainerId: user.trainerProfileId,
       parentId: assignmentGroupId,
       order: max + 1,
-      name: workout.name,
+      nameEn: workout.nameEn,
+      nameHu: workout.nameHu,
+      type,
       assignmentHistories: workout.assignmentHistories.map(
         assignmentHistory => ({
           executions: assignmentHistory.executions.map(exec => ({
@@ -230,31 +232,17 @@ export class AssignmentGroupService {
             value: exec.value
           })),
           order: assignmentHistory.order,
-          assignmentId: assignmentHistory.assignmentId,
-          assignmentGroupId: newWorkout.id
+          assignmentId: assignmentHistory.assignmentId
         })
       )
     });
   }
 
   public async attachWorkout({ userId, workoutId }, user) {
-    const workoutRepository = getRepository(Workout);
-
-    await this.attachAssignmentGroup(
-      userId,
-      workoutId,
-      user,
-      workoutRepository
-    );
+    await this.attachAssignmentGroup(userId, workoutId, user, "Workout");
   }
 
   public async attachStatistics({ userId, statisticsId }, user) {
-    const statisticsRepository = getRepository(Statistics);
-    await this.attachAssignmentGroup(
-      userId,
-      statisticsId,
-      user,
-      statisticsRepository
-    );
+    await this.attachAssignmentGroup(userId, statisticsId, user, "Statistics");
   }
 }
