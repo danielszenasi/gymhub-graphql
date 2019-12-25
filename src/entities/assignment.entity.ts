@@ -13,6 +13,7 @@ import { AssignmentHistory } from "./assignment-history.entity";
 import { Category } from "./category.entity";
 import { BodyPart } from "./body-part.entity";
 import { Measure } from "./measure.entity";
+import { Gym } from "./gym.entity";
 
 @Entity()
 @TableInheritance({ column: { type: "varchar", name: "type" } })
@@ -63,4 +64,10 @@ export class Assignment {
     AssignmentHistory => AssignmentHistory.assignment
   )
   assignmentHistories!: AssignmentHistory[];
+
+  @ManyToOne(
+    () => Gym,
+    gym => gym.exercises
+  )
+  gym: Gym;
 }

@@ -3,11 +3,14 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   Column,
-  OneToMany
+  OneToMany,
+  ManyToMany,
+  JoinTable
 } from "typeorm";
 import { Assignment } from "./assignment.entity";
 import { AssignmentGroup } from "./assignment-group.entity";
 import { Execution } from "./execution.entity";
+import { Evaluation } from "./evaluation.entity";
 
 @Entity()
 export class AssignmentHistory {
@@ -40,4 +43,17 @@ export class AssignmentHistory {
     { cascade: true }
   )
   executions: Execution[];
+
+  @ManyToMany(
+    () => Evaluation,
+    evaluation => evaluation.assignmentHistories
+  )
+  @JoinTable()
+  evaluations: Evaluation[];
+
+  @ManyToOne(
+    () => Evaluation,
+    evaluation => evaluation.selectedAssignmentHistories
+  )
+  result: Evaluation;
 }
