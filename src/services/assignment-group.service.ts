@@ -5,10 +5,7 @@ import { Assignment } from "../entities/assignment.entity";
 
 import { Workout } from "../entities/workout.entity";
 import { Statistics } from "../entities/statistics.entity";
-import {
-  AssignmentGroupState,
-  AssignmentGroup
-} from "../entities/assignment-group.entity";
+import { AssignmentGroupState } from "../entities/assignment-group.entity";
 
 export class AssignmentGroupService {
   getCriteria({ type, startsAt, userId }, user) {
@@ -100,6 +97,8 @@ export class AssignmentGroupService {
         trainerId: trainerProfileId
       })
     );
+
+    console.log(exercises);
 
     const newExercises = await this.saveHistory(newWorkout.id, exercises);
     return { ...newWorkout, exercises: newExercises };
@@ -203,46 +202,66 @@ export class AssignmentGroupService {
     return Object.keys(result).map(key => result[key]);
   }
 
-  private async attachAssignmentGroup(userId, assignmentGroupId, user, type) {
-    const repository = getRepository(AssignmentGroup);
-
+  private async attachAssignmentGroup(
+    userId,
+    assignmentGroupId,
+    user,
+    repository
+  ) {
+    const assignmentHistoryRepository = getRepository(AssignmentHistory);
     const { max } = await repository
       .createQueryBuilder("assignmentGroup")
       .select("MAX(assignmentGroup.order)", "max")
-      .where({ userId: user.id, type })
+      .where({ userId: user.id })
       .getRawOne();
 
     const workout = await repository.findOneOrFail(assignmentGroupId, {
       relations: ["assignmentHistories", "assignmentHistories.executions"]
     });
 
-    await repository.save({
+    const newWorkout = await repository.save({
       state: AssignmentGroupState.PLANNED,
       userId,
       trainerId: user.trainerProfileId,
       parentId: assignmentGroupId,
       order: max + 1,
       nameEn: workout.nameEn,
-      nameHu: workout.nameHu,
-      type,
-      assignmentHistories: workout.assignmentHistories.map(
-        assignmentHistory => ({
+      nameHu: workout.nameHu
+    });
+
+    const assignmentHistoryEntities = workout.assignmentHistories!.map(
+      assignmentHistory =>
+        assignmentHistoryRepository.create({
           executions: assignmentHistory.executions.map(exec => ({
             measureId: exec.measureId,
             value: exec.value
           })),
           order: assignmentHistory.order,
-          assignmentId: assignmentHistory.assignmentId
+          assignmentId: assignmentHistory.assignmentId,
+          assignmentGroupId: newWorkout.id
         })
-      )
-    });
+    );
+    await assignmentHistoryRepository.save(assignmentHistoryEntities);
   }
 
   public async attachWorkout({ userId, workoutId }, user) {
-    await this.attachAssignmentGroup(userId, workoutId, user, "Workout");
+    const workoutRepository = getRepository(Workout);
+
+    await this.attachAssignmentGroup(
+      userId,
+      workoutId,
+      user,
+      workoutRepository
+    );
   }
 
   public async attachStatistics({ userId, statisticsId }, user) {
-    await this.attachAssignmentGroup(userId, statisticsId, user, "Statistics");
+    const statisticsRepository = getRepository(Statistics);
+    await this.attachAssignmentGroup(
+      userId,
+      statisticsId,
+      user,
+      statisticsRepository
+    );
   }
 }
