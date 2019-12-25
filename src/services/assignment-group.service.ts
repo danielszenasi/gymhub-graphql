@@ -216,8 +216,6 @@ export class AssignmentGroupService {
       relations: ["assignmentHistories", "assignmentHistories.executions"]
     });
 
-    console.log(workout);
-
     const newWorkout = await repository.save({
       state: AssignmentGroupState.PLANNED,
       userId,
@@ -227,7 +225,7 @@ export class AssignmentGroupService {
       name: workout.name,
       assignmentHistories: workout.assignmentHistories.map(
         assignmentHistory => ({
-          executions: assignmentHistory.executed.map(exec => ({
+          executions: assignmentHistory.executions.map(exec => ({
             measureId: exec.measureId,
             value: exec.value
           })),
