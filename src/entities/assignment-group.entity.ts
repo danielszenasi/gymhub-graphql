@@ -59,7 +59,8 @@ export class AssignmentGroup {
 
   @OneToMany(
     () => AssignmentHistory,
-    AssignmentHistory => AssignmentHistory.assignmentGroup
+    AssignmentHistory => AssignmentHistory.assignmentGroup,
+    { cascade: true }
   )
   assignmentHistories?: AssignmentHistory[];
 

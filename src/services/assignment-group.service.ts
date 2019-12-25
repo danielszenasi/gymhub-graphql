@@ -208,8 +208,6 @@ export class AssignmentGroupService {
     user,
     repository
   ) {
-    const assignmentHistoryRepository = getRepository(AssignmentHistory);
-
     const { max } = await repository
       .createQueryBuilder("assignmentGroup")
       .select("MAX(assignmentGroup.order)", "max")
@@ -226,12 +224,9 @@ export class AssignmentGroupService {
       trainerId: user.trainerProfileId,
       parentId: assignmentGroupId,
       order: max + 1,
-      name: workout.name
-    });
-
-    const assignmentHistoryEntities = workout.assignmentHistories!.map(
-      assignmentHistory =>
-        assignmentHistoryRepository.create({
+      name: workout.name,
+      assignmentHistories: workout.assignmentHistories!.map(
+        assignmentHistory => ({
           executions: assignmentHistory.executed.map(exec => ({
             measureId: exec.measureId,
             value: exec.value
@@ -240,8 +235,8 @@ export class AssignmentGroupService {
           assignmentId: assignmentHistory.assignmentId,
           assignmentGroupId: newWorkout.id
         })
-    );
-    await assignmentHistoryRepository.save(assignmentHistoryEntities);
+      )
+    });
   }
 
   public async attachWorkout({ userId, workoutId }, user) {
