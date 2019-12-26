@@ -11,14 +11,16 @@ export class AssignmentGroupService {
   getCriteria({ type, startsAt, userId }, user) {
     if (type && type === "GLOBAL") {
       return {
-        isPublic: true
+        isPublic: true,
+        deletedAt: IsNull()
       };
     }
     const { trainerProfileId } = user;
     if (type && type === "COMMON") {
       return {
         trainerId: trainerProfileId,
-        userId: IsNull()
+        userId: IsNull(),
+        deletedAt: IsNull()
       };
     }
 
@@ -36,14 +38,16 @@ export class AssignmentGroupService {
 
       return {
         trainerId: trainerProfileId,
+        startsAt: startsAtRaw,
+        deletedAt: IsNull(),
         ...(userId && { userId: userId }),
-        ...(type && { state: type }),
-        startsAt: startsAtRaw
+        ...(type && { state: type })
       };
     }
 
     return {
       trainerId: trainerProfileId,
+      deletedAt: IsNull(),
       ...(userId && { userId: userId }),
       ...(type && { state: type })
     };
@@ -97,8 +101,6 @@ export class AssignmentGroupService {
         trainerId: trainerProfileId
       })
     );
-
-    console.log(exercises);
 
     const newExercises = await this.saveHistory(newWorkout.id, exercises);
     return { ...newWorkout, exercises: newExercises };
@@ -241,13 +243,16 @@ export class AssignmentGroupService {
           assignmentGroupId: newWorkout.id
         })
     );
-    await assignmentHistoryRepository.save(assignmentHistoryEntities);
+    const assignmentHistories = await assignmentHistoryRepository.save(
+      assignmentHistoryEntities
+    );
+    return { ...newWorkout, assignmentHistories };
   }
 
   public async attachWorkout({ userId, workoutId }, user) {
     const workoutRepository = getRepository(Workout);
 
-    await this.attachAssignmentGroup(
+    return await this.attachAssignmentGroup(
       userId,
       workoutId,
       user,
@@ -257,11 +262,21 @@ export class AssignmentGroupService {
 
   public async attachStatistics({ userId, statisticsId }, user) {
     const statisticsRepository = getRepository(Statistics);
-    await this.attachAssignmentGroup(
+    return await this.attachAssignmentGroup(
       userId,
       statisticsId,
       user,
       statisticsRepository
     );
+  }
+
+  public async deleteWorkout(id: string) {
+    const workoutRepository = getRepository(Workout);
+    return await workoutRepository.save({ id, deletedAt: new Date() });
+  }
+
+  public async deleteStatistics(id: string) {
+    const statisticsRepository = getRepository(Statistics);
+    return await statisticsRepository.save({ id, deletedAt: new Date() });
   }
 }

@@ -38,6 +38,8 @@ export const typeDef = gql`
       state: WorkoutState
       exercises: [AssignmentHistoryInput!]!
     ): AssignmentGroup
+    deleteStatistics(id: String!): AssignmentGroup
+    deleteWorkout(id: String!): AssignmentGroup
     createStatistics(
       startsAt: Date
       state: WorkoutState!
@@ -128,12 +130,22 @@ export const resolvers = {
     ) => {
       return assignmentGroupService.saveWorkout(args, user);
     },
+    deleteWorkout: async (_, { id }, { assignmentGroupService }: Context) => {
+      return assignmentGroupService.deleteWorkout(id);
+    },
     createStatistics: async (
       _,
       args,
       { user, assignmentGroupService }: Context
     ) => {
       return assignmentGroupService.saveStatistics(args, user);
+    },
+    deleteStatistics: async (
+      _,
+      { id },
+      { assignmentGroupService }: Context
+    ) => {
+      return assignmentGroupService.deleteStatistics(id);
     },
     updateWorkout: async (_, args, { user, assignmentGroupService }) => {
       return assignmentGroupService.updateWorkout(args, user);

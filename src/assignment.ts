@@ -1,6 +1,6 @@
 import { gql } from "apollo-server";
 import { processUpload } from "./utils";
-import { getRepository, In } from "typeorm";
+import { getRepository, In, IsNull } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
 import { AssignmentHistory } from "./entities/assignment-history.entity";
 import { Measurement } from "./entities/measurement.entity";
@@ -23,6 +23,7 @@ export const typeDef = gql`
       bodyParts: [String]!
       file: Upload
     ): Assignment
+    deleteExercise(id: String!): Assignment
     createMeasurement(
       nameEn: String
       nameHu: String
@@ -32,6 +33,7 @@ export const typeDef = gql`
       categories: [String]!
       bodyParts: [String]
     ): Assignment
+    deleteMeasurement(id: String!): Assignment
   }
   type Assignment {
     id: ID!
@@ -49,7 +51,9 @@ export const typeDef = gql`
 export const resolvers = {
   Query: {
     getExercises: async (_, { ids }, { user, loader }, info) => {
-      const criteria = user ? { userId: user.id } : { isPublic: true };
+      const criteria = user
+        ? { userId: user.id, deletedAt: IsNull() }
+        : { isPublic: true, deletedAt: IsNull() };
       const r = await loader.loadMany(
         Exercise,
         [{ ...criteria, ...(ids && { id: In(ids) }) }],
@@ -63,7 +67,9 @@ export const resolvers = {
       return loader.loadOne(Exercise, { id }, info);
     },
     getMeasurements: (_, { ids }, { user, loader }, info) => {
-      const criteria = user ? { userId: user.id } : { isPublic: true };
+      const criteria = user
+        ? { userId: user.id, deletedAt: IsNull() }
+        : { isPublic: true, deletedAt: IsNull() };
 
       return loader.loadMany(
         Measurement,
@@ -110,6 +116,20 @@ export const resolvers = {
         userId: user.id
       });
       return newExercise;
+    },
+    deleteExercise: async (_, { id }) => {
+      const exerciseRepository = getRepository(Exercise);
+      return await exerciseRepository.save({
+        id,
+        deletedAt: new Date()
+      });
+    },
+    deleteMeasurement: async (_, { id }) => {
+      const measurementRepository = getRepository(Measurement);
+      return await measurementRepository.save({
+        id,
+        deletedAt: new Date()
+      });
     },
     createMeasurement: async (
       _,

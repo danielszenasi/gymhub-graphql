@@ -71,7 +71,7 @@ export class AssignmentGroup {
   parent?: AssignmentGroup;
 
   @Column({ nullable: true })
-  parentId!: string;
+  parentId?: string;
 
   @OneToMany(
     () => AssignmentGroup,
@@ -84,4 +84,7 @@ export class AssignmentGroup {
     assignmentGroupToWorkoutPlan => assignmentGroupToWorkoutPlan.assignmentGroup
   )
   public assignmentGroupToWorkoutPlans!: AssignmentGroupToWorkoutPlan[];
+
+  @Column({ nullable: true })
+  deletedAt?: Date;
 }

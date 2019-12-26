@@ -70,4 +70,7 @@ export class Assignment {
     gym => gym.exercises
   )
   gym: Gym;
+
+  @Column({ nullable: true })
+  deletedAt?: Date;
 }
