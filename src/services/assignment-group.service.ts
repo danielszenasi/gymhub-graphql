@@ -111,6 +111,7 @@ export class AssignmentGroupService {
     { trainerProfileId }
   ) {
     const assignmentHistoryRepository = getRepository(AssignmentHistory);
+
     const workoutRepository = getRepository(Workout);
     await assignmentHistoryRepository.delete({
       assignmentGroupId: workoutId
@@ -127,8 +128,21 @@ export class AssignmentGroupService {
     );
 
     const newExercises = await this.saveHistory(newWorkout.id, exercises);
+    const ids = newExercises.map(e => e.id);
 
-    return { ...newWorkout, assignmentHistories: newExercises };
+    const assignmentHistories = await assignmentHistoryRepository.find({
+      where: { id: In(ids) },
+      relations: [
+        "assignment",
+        "executions",
+        "executions.measure",
+        "assignment.bodyParts",
+        "assignment.measures",
+        "assignment.categories"
+      ]
+    });
+
+    return { ...newWorkout, assignmentHistories };
   }
 
   async updateStatistics(
