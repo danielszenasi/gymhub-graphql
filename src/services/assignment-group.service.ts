@@ -15,7 +15,12 @@ export class AssignmentGroupService {
         deletedAt: IsNull()
       };
     }
-    const { trainerProfileId } = user;
+    const { id: userIdFromToken, trainerProfileId } = user;
+
+    const fromToken = trainerProfileId
+      ? { trainerId: trainerProfileId }
+      : { userId: userIdFromToken };
+
     if (type && type === "COMMON") {
       return {
         trainerId: trainerProfileId,
@@ -37,7 +42,7 @@ export class AssignmentGroupService {
       });
 
       return {
-        trainerId: trainerProfileId,
+        ...fromToken,
         startsAt: startsAtRaw,
         deletedAt: IsNull(),
         ...(userId && { userId: userId }),
@@ -46,7 +51,7 @@ export class AssignmentGroupService {
     }
 
     return {
-      trainerId: trainerProfileId,
+      ...fromToken,
       deletedAt: IsNull(),
       ...(userId && { userId: userId }),
       ...(type && { state: type })
