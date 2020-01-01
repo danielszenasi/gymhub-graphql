@@ -1,4 +1,4 @@
-import { IsNull, Raw, In, getRepository } from "typeorm";
+import { IsNull, Raw, In, getRepository, Not } from "typeorm";
 import { isValid, format, parseISO } from "date-fns";
 import { AssignmentHistory } from "../entities/assignment-history.entity";
 import { Assignment } from "../entities/assignment.entity";
@@ -53,7 +53,7 @@ export class AssignmentGroupService {
     return {
       ...fromToken,
       deletedAt: IsNull(),
-      ...(userId && { userId: userId }),
+      userId: userId ? userId : Not(IsNull()),
       ...(type && { state: type })
     };
   }
