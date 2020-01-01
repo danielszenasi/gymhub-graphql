@@ -93,7 +93,11 @@ export const resolvers = {
       info: GraphQLResolveInfo
     ) => {
       const criteria = assignmentGroupService.getCriteria(args, user);
-      return loader.loadMany(Workout, criteria, info);
+      return loader.loadMany(Workout, criteria, info, {
+        order: {
+          '"Workout"."startsAt"': "DESC"
+        }
+      });
     },
     getWorkout: (_, { id }) => {
       const repository = getRepository(Workout);
