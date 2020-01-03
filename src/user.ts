@@ -37,6 +37,7 @@ export const typeDef = gql`
     units: JSON!
     firstName: String
     lastName: String
+    isTrainer: Boolean!
   }
   type AuthPayload {
     token: String!
@@ -65,7 +66,7 @@ export const resolvers = {
       }
       return {
         token: generateToken(user),
-        user
+        user: { ...user, isTrainer: !!user.trainerProfileId }
       };
     },
     signup: async (
@@ -109,7 +110,7 @@ export const resolvers = {
 
       return {
         token: generateToken(newUser),
-        user: newUser
+        user: { ...newUser, isTrainer: !!newUser.trainerProfileId }
       };
     },
     inviteUser: async (_, { email }, { mailer, user }) => {
@@ -156,7 +157,8 @@ export const resolvers = {
       }
 
       const hashedPassword = await hash(password, 10);
-      const updatedUser = await userRepository.update(user.id, {
+      const updatedUser = await userRepository.save({
+        id: user.id,
         firstName,
         lastName,
         inviteToken: "",
@@ -166,7 +168,7 @@ export const resolvers = {
 
       return {
         token: generateToken(updatedUser),
-        user: updatedUser
+        user: { ...updatedUser, isTrainer: !!updatedUser.trainerProfileId }
       };
     }
   }
