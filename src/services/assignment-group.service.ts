@@ -203,6 +203,9 @@ export class AssignmentGroupService {
       select: ["assignmentId"]
     });
 
+    if (!exerciseHistories.length) {
+      return null;
+    }
     const ids = exerciseHistories.map(
       exerciseHistories => exerciseHistories.assignmentId
     );
