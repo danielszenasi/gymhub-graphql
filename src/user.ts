@@ -5,7 +5,7 @@ import { Trainer } from "./entities/trainer.entity";
 import { User } from "./entities/user.entity";
 import { compare, hash } from "bcryptjs";
 import { getRepository } from "typeorm";
-import { generateToken } from "./utils";
+import { generateToken, processUpload } from "./utils";
 
 export const typeDef = gql`
   extend type Query {
@@ -29,6 +29,7 @@ export const typeDef = gql`
       firstName: String
       lastName: String
     ): AuthPayload
+    updateUser(profileImage: Upload): User
   }
   type User {
     id: ID!
@@ -38,6 +39,7 @@ export const typeDef = gql`
     firstName: String
     lastName: String
     isTrainer: Boolean!
+    profileImageUrl: String
   }
   type AuthPayload {
     token: String!
@@ -168,8 +170,20 @@ export const resolvers = {
 
       return {
         token: generateToken(updatedUser),
-        user: { ...updatedUser, isTrainer: !!updatedUser.trainerProfileId }
+        user: {
+          ...updatedUser,
+          isTrainer: !!updatedUser.trainerProfileId
+        }
       };
+    },
+    updateUser: async (_, { profileImage }, { user }) => {
+      const userRepository = getRepository(User);
+      const url = profileImage ? await processUpload(profileImage) : null;
+      const updatedUser = await userRepository.save({
+        id: user.id,
+        profileImageUrl: url
+      });
+      return updatedUser;
     }
   }
 };
