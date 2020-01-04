@@ -3,7 +3,7 @@ import { Workout } from "./entities/workout.entity";
 import { GraphQLResolveInfo } from "graphql";
 import { Context } from "./main";
 import { Statistics } from "./entities/statistics.entity";
-import { getRepository } from "typeorm";
+import { getRepository, IsNull } from "typeorm";
 
 export const typeDef = gql`
   extend type Query {
@@ -11,6 +11,8 @@ export const typeDef = gql`
       type: WorkoutType
       userId: String
       startsAt: Date
+      days: Int
+      skipTodo: Int
     ): [AssignmentGroup]
     getWorkout(id: ID!): AssignmentGroup
     getStatistics(
@@ -86,18 +88,44 @@ export const typeDef = gql`
 `;
 export const resolvers = {
   Query: {
-    getWorkouts: (
+    getWorkouts: async (
       _,
       args,
       { user, loader, assignmentGroupService },
       info: GraphQLResolveInfo
     ) => {
       const criteria = assignmentGroupService.getCriteria(args, user);
-      return loader.loadMany(Workout, criteria, info, {
+      const workouts = await loader.loadMany(Workout, criteria, info, {
         order: {
           '"Workout"."startsAt"': "DESC"
         }
       });
+
+      if (args.startsAt && args.days && workouts.length < 4) {
+        const limit = 4 - workouts.length;
+        const fromToken = user.trainerProfileId
+          ? { trainerId: user.trainerProfileId }
+          : { userId: user.id };
+        const [todos] = await loader.loadManyPaginated(
+          Workout,
+          {
+            ...fromToken,
+            startsAt: IsNull(),
+            deletedAt: IsNull()
+          },
+          info,
+          { limit, offset: args.skipTodo },
+          {
+            order: {
+              '"Workout"."order"': "ASC"
+            }
+          }
+        );
+
+        return [...workouts, ...todos];
+      }
+
+      return workouts;
     },
     getWorkout: (_, { id }) => {
       const repository = getRepository(Workout);

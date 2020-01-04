@@ -1,5 +1,5 @@
-import { IsNull, Raw, In, getRepository, Not } from "typeorm";
-import { isValid, format, parseISO } from "date-fns";
+import { IsNull, Raw, In, getRepository, Not, Between } from "typeorm";
+import { isValid, format, parseISO, addDays } from "date-fns";
 import { AssignmentHistory } from "../entities/assignment-history.entity";
 import { Assignment } from "../entities/assignment.entity";
 
@@ -8,7 +8,7 @@ import { Statistics } from "../entities/statistics.entity";
 import { AssignmentGroupState } from "../entities/assignment-group.entity";
 
 export class AssignmentGroupService {
-  getCriteria({ type, startsAt, userId }, user) {
+  getCriteria({ type, startsAt, days, userId }, user) {
     if (type && type === "GLOBAL") {
       return {
         isPublic: true,
@@ -26,6 +26,16 @@ export class AssignmentGroupService {
         trainerId: trainerProfileId,
         userId: IsNull(),
         deletedAt: IsNull()
+      };
+    }
+
+    if (startsAt && isValid(parseISO(startsAt)) && days) {
+      var endDate = addDays(parseISO(startsAt), days);
+      return {
+        ...fromToken,
+        startsAt: Between(startsAt, endDate.toISOString()),
+        deletedAt: IsNull(),
+        ...(userId && { userId: userId })
       };
     }
 
