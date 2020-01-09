@@ -3,7 +3,9 @@ import { Workout } from "./entities/workout.entity";
 import { GraphQLResolveInfo } from "graphql";
 import { Context } from "./main";
 import { Statistics } from "./entities/statistics.entity";
-import { getRepository, IsNull } from "typeorm";
+import { getRepository, IsNull, Not } from "typeorm";
+import { addDays, parseISO } from "date-fns";
+import { rrulestr } from "rrule";
 
 export const typeDef = gql`
   extend type Query {
@@ -25,12 +27,13 @@ export const typeDef = gql`
   extend type Mutation {
     createWorkout(
       startsAt: Date
-      state: WorkoutState!
+      state: WorkoutState
       userId: String
       nameEn: String
       nameHu: String
       planWorkoutId: ID
-      exercises: [AssignmentHistoryInput!]!
+      exercises: [AssignmentHistoryInput]
+      recurringWeekly: Boolean
     ): AssignmentGroup
     updateWorkout(
       workoutId: ID!
@@ -38,7 +41,8 @@ export const typeDef = gql`
       nameEn: String
       nameHu: String
       state: WorkoutState
-      exercises: [AssignmentHistoryInput!]!
+      exercises: [AssignmentHistoryInput]
+      recurringWeekly: Boolean
     ): AssignmentGroup
     deleteStatistics(id: String!): AssignmentGroup
     deleteWorkout(id: String!): AssignmentGroup
@@ -97,15 +101,41 @@ export const resolvers = {
       const criteria = assignmentGroupService.getCriteria(args, user);
       const workouts = await loader.loadMany(Workout, criteria, info, {
         order: {
-          '"Workout"."startsAt"': "DESC"
+          '"Workout"."startsAt"': "ASC"
         }
       });
 
       if (args.startsAt && args.days && workouts.length < 4) {
-        const limit = 4 - workouts.length;
+        const endDate = addDays(parseISO(args.startsAt), args.days);
         const fromToken = user.trainerProfileId
           ? { trainerId: user.trainerProfileId }
           : { userId: user.id };
+
+        const recurringWorkouts = await loader.loadMany(
+          Workout,
+          { ...fromToken, rrule: Not(IsNull()), deletedAt: IsNull() },
+          info,
+          { requiredSelectFields: ["rrule"] }
+        );
+
+        const allRecurringWorkouts = recurringWorkouts.reduce(
+          (acc, workout) => {
+            console.log(workout);
+
+            const rule = rrulestr(workout.rrule);
+
+            console.log(rule.between(parseISO(args.startsAt), endDate));
+
+            const newWorkouts = rule
+              .between(parseISO(args.startsAt), endDate)
+              .map(date => ({ ...workout, startsAt: date }));
+            return acc.concat(newWorkouts);
+          },
+          []
+        );
+
+        const limit = 4 - workouts.length;
+
         const [todos] = await loader.loadManyPaginated(
           Workout,
           {
@@ -122,7 +152,7 @@ export const resolvers = {
           }
         );
 
-        return [...workouts, ...todos];
+        return [...workouts, ...todos, ...allRecurringWorkouts];
       }
 
       return workouts;

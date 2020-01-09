@@ -2,10 +2,10 @@ import { IsNull, Raw, In, getRepository, Not, Between } from "typeorm";
 import { isValid, format, parseISO, addDays } from "date-fns";
 import { AssignmentHistory } from "../entities/assignment-history.entity";
 import { Assignment } from "../entities/assignment.entity";
-
 import { Workout } from "../entities/workout.entity";
 import { Statistics } from "../entities/statistics.entity";
 import { AssignmentGroupState } from "../entities/assignment-group.entity";
+import { RRule } from "rrule";
 
 export class AssignmentGroupService {
   getCriteria({ type, startsAt, days, userId }, user) {
@@ -30,12 +30,13 @@ export class AssignmentGroupService {
     }
 
     if (startsAt && isValid(parseISO(startsAt)) && days) {
-      var endDate = addDays(parseISO(startsAt), days);
+      const endDate = addDays(parseISO(startsAt), days);
       return {
         ...fromToken,
         startsAt: Between(startsAt, endDate.toISOString()),
         deletedAt: IsNull(),
-        ...(userId && { userId: userId })
+        ...(userId && { userId: userId }),
+        rrule: IsNull()
       };
     }
 
@@ -56,7 +57,8 @@ export class AssignmentGroupService {
         startsAt: startsAtRaw,
         deletedAt: IsNull(),
         ...(userId && { userId: userId }),
-        ...(type && { state: type })
+        ...(type && { state: type }),
+        rrule: IsNull()
       };
     }
 
@@ -64,7 +66,8 @@ export class AssignmentGroupService {
       ...fromToken,
       deletedAt: IsNull(),
       userId: userId ? userId : Not(IsNull()),
-      ...(type && { state: type })
+      ...(type && { state: type }),
+      rrule: IsNull()
     };
   }
 
@@ -102,7 +105,7 @@ export class AssignmentGroupService {
   }
 
   async saveWorkout(
-    { nameEn, startsAt, exercises, userId, state },
+    { nameEn, nameHu, startsAt, exercises, userId, state, recurringWeekly },
     { trainerProfileId }
   ) {
     const workoutRepository = getRepository(Workout);
@@ -110,19 +113,31 @@ export class AssignmentGroupService {
     const newWorkout = await workoutRepository.save(
       workoutRepository.create({
         nameEn,
+        nameHu,
         state,
         startsAt,
         userId,
-        trainerId: trainerProfileId
+        trainerId: trainerProfileId,
+        rrule: recurringWeekly
+          ? new RRule({
+              freq: RRule.WEEKLY,
+              interval: 1,
+              dtstart: new Date(startsAt)
+            }).toString()
+          : undefined
       })
     );
+
+    if (!exercises) {
+      return newWorkout;
+    }
 
     const newExercises = await this.saveHistory(newWorkout.id, exercises);
     return { ...newWorkout, exercises: newExercises };
   }
 
   async updateWorkout(
-    { workoutId, nameEn, startsAt, exercises, state },
+    { workoutId, nameEn, nameHu, startsAt, exercises, state, recurringWeekly },
     { trainerProfileId }
   ) {
     const assignmentHistoryRepository = getRepository(AssignmentHistory);
@@ -138,9 +153,21 @@ export class AssignmentGroupService {
         state: state,
         startsAt,
         nameEn,
-        trainerId: trainerProfileId
+        nameHu,
+        trainerId: trainerProfileId,
+        rrule: recurringWeekly
+          ? new RRule({
+              freq: RRule.WEEKLY,
+              interval: 1,
+              dtstart: new Date(startsAt)
+            }).toString()
+          : undefined
       })
     );
+
+    if (!exercises) {
+      return newWorkout;
+    }
 
     const newExercises = await this.saveHistory(newWorkout.id, exercises);
     const ids = newExercises.map(e => e.id);
@@ -161,7 +188,7 @@ export class AssignmentGroupService {
   }
 
   async updateStatistics(
-    { statisticsId, nameEn, startsAt, measurements, state },
+    { statisticsId, nameEn, nameHu, startsAt, measurements, state },
     { trainerProfileId }
   ) {
     const assignmentHistoryRepository = getRepository(AssignmentHistory);
@@ -176,6 +203,7 @@ export class AssignmentGroupService {
         state: state,
         startsAt,
         nameEn,
+        nameHu,
         trainerId: trainerProfileId
       })
     );
@@ -190,10 +218,12 @@ export class AssignmentGroupService {
 
     const exerciseEntities = assignments.map((assignment, index) =>
       assignmentHistoryRepository.create({
-        executions: assignment.executed.map(exec => ({
-          measureId: exec.measureId,
-          value: exec.value
-        })),
+        executions: assignment.executed
+          ? assignment.executed.map(exec => ({
+              measureId: exec.measureId,
+              value: exec.value
+            }))
+          : [],
         assignmentId: assignment.id,
         order: index,
         assignmentGroupId
@@ -309,6 +339,9 @@ export class AssignmentGroupService {
 
   public async deleteStatistics(id: string) {
     const statisticsRepository = getRepository(Statistics);
-    return await statisticsRepository.save({ id, deletedAt: new Date() });
+    return await statisticsRepository.save({
+      id,
+      deletedAt: new Date()
+    });
   }
 }

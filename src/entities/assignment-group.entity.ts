@@ -29,7 +29,7 @@ export class AssignmentGroup {
   state!: AssignmentGroupState;
 
   @Column({ nullable: true })
-  public order!: number;
+  public order?: number;
 
   @Column({ nullable: true }) nameEn?: string;
 
@@ -87,4 +87,7 @@ export class AssignmentGroup {
 
   @Column({ nullable: true })
   deletedAt?: Date;
+
+  @Column({ nullable: true })
+  rrule?: string;
 }
