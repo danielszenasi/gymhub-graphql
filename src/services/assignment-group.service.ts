@@ -148,9 +148,6 @@ export class AssignmentGroupService {
     const assignmentHistoryRepository = getRepository(AssignmentHistory);
 
     const workoutRepository = getRepository(Workout);
-    await assignmentHistoryRepository.delete({
-      assignmentGroupId: workoutId
-    });
 
     const newWorkout = await workoutRepository.save({
       id: workoutId,
@@ -158,7 +155,6 @@ export class AssignmentGroupService {
       startsAt,
       nameEn,
       nameHu,
-
       rrule: recurringWeekly
         ? new RRule({
             freq: RRule.WEEKLY,
@@ -171,6 +167,10 @@ export class AssignmentGroupService {
     if (!exercises) {
       return newWorkout;
     }
+
+    await assignmentHistoryRepository.delete({
+      assignmentGroupId: workoutId
+    });
 
     const newExercises = await this.saveHistory(newWorkout.id, exercises);
     const ids = newExercises.map(e => e.id);
