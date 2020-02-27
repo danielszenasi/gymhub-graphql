@@ -136,10 +136,15 @@ export class AssignmentGroupService {
     return { ...newWorkout, exercises: newExercises };
   }
 
-  async updateWorkout(
-    { workoutId, nameEn, nameHu, startsAt, exercises, state, recurringWeekly },
-    { trainerProfileId }
-  ) {
+  async updateWorkout({
+    workoutId,
+    nameEn,
+    nameHu,
+    startsAt,
+    exercises,
+    state,
+    recurringWeekly
+  }) {
     const assignmentHistoryRepository = getRepository(AssignmentHistory);
 
     const workoutRepository = getRepository(Workout);
@@ -147,23 +152,21 @@ export class AssignmentGroupService {
       assignmentGroupId: workoutId
     });
 
-    const newWorkout = await workoutRepository.save(
-      workoutRepository.create({
-        id: workoutId,
-        state: state,
-        startsAt,
-        nameEn,
-        nameHu,
-        trainerId: trainerProfileId,
-        rrule: recurringWeekly
-          ? new RRule({
-              freq: RRule.WEEKLY,
-              interval: 1,
-              dtstart: new Date(startsAt)
-            }).toString()
-          : undefined
-      })
-    );
+    const newWorkout = await workoutRepository.save({
+      id: workoutId,
+      state: state,
+      startsAt,
+      nameEn,
+      nameHu,
+
+      rrule: recurringWeekly
+        ? new RRule({
+            freq: RRule.WEEKLY,
+            interval: 1,
+            dtstart: new Date(startsAt)
+          }).toString()
+        : undefined
+    });
 
     if (!exercises) {
       return newWorkout;
@@ -187,26 +190,27 @@ export class AssignmentGroupService {
     return { ...newWorkout, assignmentHistories };
   }
 
-  async updateStatistics(
-    { statisticsId, nameEn, nameHu, startsAt, measurements, state },
-    { trainerProfileId }
-  ) {
+  async updateStatistics({
+    statisticsId,
+    nameEn,
+    nameHu,
+    startsAt,
+    measurements,
+    state
+  }) {
     const assignmentHistoryRepository = getRepository(AssignmentHistory);
     const statisticsRepository = getRepository(Statistics);
     await assignmentHistoryRepository.delete({
       assignmentGroupId: statisticsId
     });
 
-    const newWorkout = await statisticsRepository.save(
-      statisticsRepository.create({
-        id: statisticsId,
-        state: state,
-        startsAt,
-        nameEn,
-        nameHu,
-        trainerId: trainerProfileId
-      })
-    );
+    const newWorkout = await statisticsRepository.save({
+      id: statisticsId,
+      state: state,
+      startsAt,
+      nameEn,
+      nameHu
+    });
 
     const newMeasurements = await this.saveHistory(newWorkout.id, measurements);
 
