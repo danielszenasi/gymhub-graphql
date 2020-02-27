@@ -69,6 +69,11 @@ export const resolvers = {
       if (!user) {
         throw new Error("user not found");
       }
+      console.log(typeof user.emailConfirmToken);
+      console.log(typeof emailConfirmToken);
+      console.log(JSON.stringify(user));
+      console.log(emailConfirmToken);
+
       if (user.emailConfirmToken !== emailConfirmToken || user.emailConfirmed) {
         throw new Error("token invalid");
       }
