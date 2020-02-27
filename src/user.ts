@@ -13,6 +13,7 @@ export const typeDef = gql`
     clients: [User]
   }
   extend type Mutation {
+    confirmEmail(email: String!, emailConfirmToken: String!): AuthPayload!
     login(email: String!, password: String!): AuthPayload
     signup(
       email: String!
@@ -59,6 +60,30 @@ export const resolvers = {
     }
   },
   Mutation: {
+    async confirmEmail(_, { emailConfirmToken, email }) {
+      if (!emailConfirmToken || !email) {
+        throw new Error();
+      }
+      const userRepository = getRepository(User);
+      const user = await userRepository.findOne({ where: { email } });
+      if (!user) {
+        throw new Error("user not found");
+      }
+      if (user.emailConfirmToken !== emailConfirmToken || user.emailConfirmed) {
+        throw new Error("token invalid");
+      }
+
+      const updatedUser = await userRepository.save({
+        id: user.id,
+        emailConfirmToken: "",
+        emailConfirmed: true
+      });
+
+      return {
+        token: generateToken(user),
+        user: updatedUser
+      };
+    },
     login: async (_, { email, password }) => {
       const userRepository = getRepository(User);
       const user = await userRepository.findOneOrFail({ email });
