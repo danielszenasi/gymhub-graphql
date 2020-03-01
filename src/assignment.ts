@@ -115,7 +115,9 @@ export const resolvers = {
         url,
         userId: user.id
       });
-      return newExercise;
+      return exerciseRepository.findOne(newExercise.id, {
+        relations: ["measures", "categories", "bodyParts"]
+      });
     },
     deleteExercise: async (_, { id }) => {
       const exerciseRepository = getRepository(Exercise);
