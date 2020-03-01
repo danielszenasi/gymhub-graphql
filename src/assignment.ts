@@ -4,6 +4,7 @@ import { getRepository, In, IsNull } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
 import { AssignmentHistory } from "./entities/assignment-history.entity";
 import { Measurement } from "./entities/measurement.entity";
+import { User } from "entities/user.entity";
 
 export const typeDef = gql`
   extend type Query {
@@ -51,9 +52,21 @@ export const typeDef = gql`
 export const resolvers = {
   Query: {
     getExercises: async (_, { ids }, { user, loader }, info) => {
-      const criteria = user
-        ? { userId: user.id, deletedAt: IsNull() }
-        : { isPublic: true, deletedAt: IsNull() };
+      let criteria: any = { isPublic: true, deletedAt: IsNull() };
+      const userEntity = user
+        ? await loader.loadOne(User, { id: user.id })
+        : null;
+
+      if (userEntity) {
+        criteria = { userId: userEntity.id, deletedAt: IsNull() };
+      }
+      if (userEntity && userEntity) {
+        criteria = {
+          userId: In([userEntity.id, userEntity.trainerProfileId]),
+          deletedAt: IsNull()
+        };
+      }
+
       const r = await loader.loadMany(
         Exercise,
         [{ ...criteria, ...(ids && { id: In(ids) }) }],
