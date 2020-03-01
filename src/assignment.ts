@@ -54,7 +54,7 @@ export const resolvers = {
     getExercises: async (_, { ids }, { user, loader }, info) => {
       let criteria: any = { isPublic: true, deletedAt: IsNull() };
       const userEntity = user
-        ? await loader.loadOne(User, { id: user.id })
+        ? await loader.loadOne(User, { id: user.id }, info)
         : null;
 
       if (userEntity) {
