@@ -4,7 +4,7 @@ import { getRepository, In, IsNull } from "typeorm";
 import { Exercise } from "./entities/exercise.entity";
 import { AssignmentHistory } from "./entities/assignment-history.entity";
 import { Measurement } from "./entities/measurement.entity";
-import { User } from "entities/user.entity";
+import { User } from "./entities/user.entity";
 
 export const typeDef = gql`
   extend type Query {
