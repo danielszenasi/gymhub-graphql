@@ -21,6 +21,8 @@ export const typeDef = gql`
       type: WorkoutType
       userId: String
       startsAt: Date
+      days: Int
+      skipTodo: Int
     ): [AssignmentGroup]
     getStatistic(id: ID!): AssignmentGroup
   }
@@ -120,12 +122,7 @@ export const resolvers = {
 
         const allRecurringWorkouts = recurringWorkouts.reduce(
           (acc, workout) => {
-            console.log(workout);
-
             const rule = rrulestr(workout.rrule);
-
-            console.log(rule.between(parseISO(args.startsAt), endDate));
-
             const newWorkouts = rule
               .between(parseISO(args.startsAt), endDate)
               .map(date => ({ ...workout, startsAt: date }));
@@ -174,14 +171,39 @@ export const resolvers = {
     getStatistic: (_, { id }, { loader }, info: GraphQLResolveInfo) => {
       return loader.loadOne(Statistics, { id }, info);
     },
-    getStatistics: (
+    getStatistics: async (
       _,
       args,
       { user, loader, assignmentGroupService },
       info: GraphQLResolveInfo
     ) => {
       const criteria = assignmentGroupService.getCriteria(args, user);
-      return loader.loadMany(Statistics, criteria, info);
+      const statistics = await loader.loadMany(Statistics, criteria, info);
+      if (args.startsAt && args.days && args.userId && statistics.length < 4) {
+        const limit = 4 - statistics.length;
+        const fromToken = user.trainerProfileId
+          ? { trainerId: user.trainerProfileId }
+          : { userId: user.id };
+        const [todos] = await loader.loadManyPaginated(
+          Statistics,
+          {
+            ...fromToken,
+
+            startsAt: IsNull(),
+            deletedAt: IsNull()
+          },
+          info,
+          { limit, offset: args.skipTodo },
+          {
+            order: {
+              '"Statistics"."order"': "ASC"
+            }
+          }
+        );
+
+        return [...statistics, ...todos];
+      }
+      return statistics;
     }
   },
   Mutation: {

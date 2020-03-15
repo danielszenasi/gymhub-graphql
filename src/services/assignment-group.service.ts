@@ -5,7 +5,7 @@ import { Assignment } from "../entities/assignment.entity";
 import { Workout } from "../entities/workout.entity";
 import { Statistics } from "../entities/statistics.entity";
 import { AssignmentGroupState } from "../entities/assignment-group.entity";
-import { RRule } from "rrule";
+import { RRule, RRuleSet, rrulestr } from "rrule";
 
 export class AssignmentGroupService {
   getCriteria({ type, startsAt, days, userId }, user) {
@@ -110,6 +110,14 @@ export class AssignmentGroupService {
   ) {
     const workoutRepository = getRepository(Workout);
 
+    const rruleSet = new RRuleSet();
+    rruleSet.rrule(
+      new RRule({
+        freq: RRule.WEEKLY,
+        interval: 1,
+        dtstart: new Date(startsAt)
+      })
+    );
     const newWorkout = await workoutRepository.save(
       workoutRepository.create({
         nameEn,
@@ -118,13 +126,7 @@ export class AssignmentGroupService {
         startsAt,
         userId,
         trainerId: trainerProfileId,
-        rrule: recurringWeekly
-          ? new RRule({
-              freq: RRule.WEEKLY,
-              interval: 1,
-              dtstart: new Date(startsAt)
-            }).toString()
-          : undefined
+        rrule: recurringWeekly ? rruleSet.toString() : undefined
       })
     );
 
@@ -145,28 +147,55 @@ export class AssignmentGroupService {
     state,
     recurringWeekly
   }) {
-    const assignmentHistoryRepository = getRepository(AssignmentHistory);
-
     const workoutRepository = getRepository(Workout);
 
+    const workout = await workoutRepository.findOne(workoutId);
+    if (workout && workout.rrule) {
+      const newWorkout = await workoutRepository.save({
+        state: state,
+        startsAt,
+        nameEn,
+        nameHu
+      });
+
+      const rruleSet = rrulestr(workout.rrule) as RRuleSet;
+      rruleSet.exdate(startsAt);
+      await workoutRepository.save({
+        id: workoutId,
+        rrule: rruleSet.toString()
+      });
+      return this.saveHistoryAndQuery(workoutId, exercises, newWorkout);
+    }
+
+    const rruleSet = new RRuleSet();
+    rruleSet.rrule(
+      new RRule({
+        freq: RRule.WEEKLY,
+        interval: 1,
+        dtstart: new Date(startsAt)
+      })
+    );
     const newWorkout = await workoutRepository.save({
       id: workoutId,
       state: state,
       startsAt,
       nameEn,
       nameHu,
-      rrule: recurringWeekly
-        ? new RRule({
-            freq: RRule.WEEKLY,
-            interval: 1,
-            dtstart: new Date(startsAt)
-          }).toString()
-        : undefined
+      rrule: recurringWeekly ? rruleSet.toString() : undefined
     });
 
+    return this.saveHistoryAndQuery(workoutId, exercises, newWorkout);
+  }
+
+  async saveHistoryAndQuery(
+    workoutId: string,
+    exercises: any,
+    newWorkout: Workout
+  ) {
     if (!exercises) {
       return newWorkout;
     }
+    const assignmentHistoryRepository = getRepository(AssignmentHistory);
 
     await assignmentHistoryRepository.delete({
       assignmentGroupId: workoutId
