@@ -106,11 +106,13 @@ export const resolvers = {
           '"Workout"."startsAt"': "ASC"
         }
       });
-
-      if (args.startsAt && args.days && workouts.length < 4) {
+      const userOrTrainer =
+        (user.trainerProfileId && args.userId) ||
+        (!user.trainerProfileId && user.id);
+      if (args.startsAt && args.days && workouts.length < 4 && userOrTrainer) {
         const endDate = addDays(parseISO(args.startsAt), args.days);
         const fromToken = user.trainerProfileId
-          ? { trainerId: user.trainerProfileId }
+          ? { trainerId: user.trainerProfileId, userId: args.userId }
           : { userId: user.id };
 
         const recurringWorkouts = await loader.loadMany(
@@ -179,10 +181,18 @@ export const resolvers = {
     ) => {
       const criteria = assignmentGroupService.getCriteria(args, user);
       const statistics = await loader.loadMany(Statistics, criteria, info);
-      if (args.startsAt && args.days && args.userId && statistics.length < 4) {
+      const userOrTrainer =
+        (user.trainerProfileId && args.userId) ||
+        (!user.trainerProfileId && user.id);
+      if (
+        args.startsAt &&
+        args.days &&
+        statistics.length < 4 &&
+        userOrTrainer
+      ) {
         const limit = 4 - statistics.length;
         const fromToken = user.trainerProfileId
-          ? { trainerId: user.trainerProfileId }
+          ? { trainerId: user.trainerProfileId, userId: args.userId }
           : { userId: user.id };
         const [todos] = await loader.loadManyPaginated(
           Statistics,
